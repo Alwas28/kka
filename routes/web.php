@@ -27,15 +27,39 @@ use App\Http\Controllers\PelaksanaanController;
 use App\Http\Controllers\PesertaController;
 use App\Http\Controllers\SurveyLokasiController;
 use App\Http\Controllers\UserRoleController;
+use App\Http\Controllers\BeritaController;
 use App\Http\Controllers\DosenPembimbingController;
+use App\Http\Controllers\HalamanController;
 use App\Http\Controllers\MahasiswaProfilController;
+use App\Http\Controllers\MenuController;
+use App\Http\Controllers\PengumumanController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    $beritaTerbaru = \App\Models\Berita::where('status', 'published')
+        ->latest('published_at')
+        ->take(3)
+        ->get();
+    $pengumumanAktif = \App\Models\Pengumuman::where('status', 'aktif')
+        ->where(function ($q) {
+            $q->whereNull('tanggal_selesai')
+              ->orWhere('tanggal_selesai', '>=', today());
+        })
+        ->where('tanggal_mulai', '<=', today())
+        ->orderByDesc('is_penting')
+        ->orderByDesc('created_at')
+        ->take(10)
+        ->get();
+    $navMenus = \App\Models\Menu::activeNav();
+    return view('welcome', compact('beritaTerbaru', 'pengumumanAktif', 'navMenus'));
 });
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+
+// Public pages (no auth required)
+Route::get('/info/berita/{berita:slug}', [BeritaController::class, 'show'])->name('berita.show');
+Route::get('/info/pengumuman/{pengumuman}', [PengumumanController::class, 'show'])->name('pengumuman.show');
+Route::get('/halaman/{page:slug}', [HalamanController::class, 'show'])->name('halaman.show');
 
 // Registrasi Mahasiswa (publik)
 Route::get('/daftar', [MahasiswaRegisterController::class, 'showForm'])->name('mahasiswa.register');
@@ -168,6 +192,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/registrasi/disetujui', [RegistrasiMahasiswaController::class, 'disetujui'])->name('registrasi.disetujui');
     Route::post('/registrasi/{mahasiswa}/setujui', [RegistrasiMahasiswaController::class, 'setujui'])->name('registrasi.setujui');
     Route::post('/registrasi/{mahasiswa}/tolak', [RegistrasiMahasiswaController::class, 'tolak'])->name('registrasi.tolak');
+    Route::post('/registrasi/{mahasiswa}/kembalikan', [RegistrasiMahasiswaController::class, 'kembalikan'])->name('registrasi.kembalikan');
 
     // Verifikasi Dokumen
     Route::get('/dokumen/pembayaran', [DokumenVerifikasiController::class, 'pembayaran'])->name('dokumen.pembayaran');
@@ -216,6 +241,42 @@ Route::middleware('auth')->group(function () {
     Route::post('/kelompok/{survey}/mahasiswa/{mahasiswa}/koordinator', [KelompokController::class, 'setKoordinator'])->name('kelompok.koordinator');
     Route::post('/kelompok/{survey}/dosen', [KelompokController::class, 'tambahDosen'])->name('kelompok.tambah-dosen');
     Route::delete('/kelompok/{survey}/dosen/{pegawai}', [KelompokController::class, 'hapusDosen'])->name('kelompok.hapus-dosen');
+
+    // Upload gambar dalam konten editor
+    Route::post('/upload/gambar-konten', [BeritaController::class, 'uploadGambarKonten'])->name('upload.gambar-konten');
+
+    // Berita
+    Route::get('/berita', [BeritaController::class, 'index'])->name('berita.index');
+    Route::get('/berita/create', [BeritaController::class, 'create'])->name('berita.create');
+    Route::post('/berita', [BeritaController::class, 'store'])->name('berita.store');
+    Route::get('/berita/{berita}/edit', [BeritaController::class, 'edit'])->name('berita.edit');
+    Route::put('/berita/{berita}', [BeritaController::class, 'update'])->name('berita.update');
+    Route::delete('/berita/{berita}', [BeritaController::class, 'destroy'])->name('berita.destroy');
+
+    // Pengumuman
+    Route::get('/pengumuman', [PengumumanController::class, 'index'])->name('pengumuman.index');
+    Route::get('/pengumuman/create', [PengumumanController::class, 'create'])->name('pengumuman.create');
+    Route::post('/pengumuman', [PengumumanController::class, 'store'])->name('pengumuman.store');
+    Route::get('/pengumuman/{pengumuman}/edit', [PengumumanController::class, 'edit'])->name('pengumuman.edit');
+    Route::put('/pengumuman/{pengumuman}', [PengumumanController::class, 'update'])->name('pengumuman.update');
+    Route::delete('/pengumuman/{pengumuman}', [PengumumanController::class, 'destroy'])->name('pengumuman.destroy');
+    Route::post('/pengumuman/{pengumuman}/toggle', [PengumumanController::class, 'toggleStatus'])->name('pengumuman.toggle');
+
+    // Menu Navigasi
+    Route::get('/kelola/menu', [MenuController::class, 'index'])->name('menu.index');
+    Route::get('/kelola/menu/create', [MenuController::class, 'create'])->name('menu.create');
+    Route::post('/kelola/menu', [MenuController::class, 'store'])->name('menu.store');
+    Route::get('/kelola/menu/{menu}/edit', [MenuController::class, 'edit'])->name('menu.edit');
+    Route::put('/kelola/menu/{menu}', [MenuController::class, 'update'])->name('menu.update');
+    Route::delete('/kelola/menu/{menu}', [MenuController::class, 'destroy'])->name('menu.destroy');
+
+    // Halaman Konten
+    Route::get('/kelola/halaman', [HalamanController::class, 'index'])->name('halaman.index');
+    Route::get('/kelola/halaman/create', [HalamanController::class, 'create'])->name('halaman.create');
+    Route::post('/kelola/halaman', [HalamanController::class, 'store'])->name('halaman.store');
+    Route::get('/kelola/halaman/{page}/edit', [HalamanController::class, 'edit'])->name('halaman.edit');
+    Route::put('/kelola/halaman/{page}', [HalamanController::class, 'update'])->name('halaman.update');
+    Route::delete('/kelola/halaman/{page}', [HalamanController::class, 'destroy'])->name('halaman.destroy');
 
     // Kegiatan
     Route::get('/kegiatan', [KegiatanController::class, 'index'])->name('kegiatan.index');

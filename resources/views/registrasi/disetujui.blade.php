@@ -119,6 +119,9 @@
                     <th>Fakultas</th>
                     <th>Tgl. Disetujui</th>
                     <th>Status Form</th>
+                    @if(auth()->user()->hasAccess('validasi.register'))
+                    <th style="width:80px">Aksi</th>
+                    @endif
                 </tr>
             </thead>
             <tbody id="regTableBody">
@@ -173,6 +176,18 @@
                             {{ $formLabel }}
                         </span>
                     </td>
+                    @if(auth()->user()->hasAccess('validasi.register'))
+                    <td>
+                        <form method="POST" action="{{ route('registrasi.kembalikan', $mhs) }}"
+                              onsubmit="return confirm('Batalkan persetujuan {{ addslashes($mhs->nama) }}? Mahasiswa akan dikembalikan ke daftar registrasi.')">
+                            @csrf
+                            <button type="submit" class="btn-icon" title="Batalkan Persetujuan"
+                                    style="background:rgba(239,68,68,.1); color:#dc2626; border:1px solid rgba(239,68,68,.2); border-radius:6px; padding:6px 10px; cursor:pointer; font-size:13px;">
+                                <i class="fas fa-rotate-left"></i>
+                            </button>
+                        </form>
+                    </td>
+                    @endif
                 </tr>
                 @endforeach
             </tbody>

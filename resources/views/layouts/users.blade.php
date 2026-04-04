@@ -22,258 +22,328 @@
             </div>
 
             <nav class="sidebar-nav">
+
+                {{-- ── MENU UTAMA ──────────────────────────────────────── --}}
+                @php
+                    $u = auth()->user();
+
+                    $hasMasterData = $u->hasAccess('lihat.jenis-kka')
+                        || $u->hasAccess('lihat.tahun')
+                        || $u->hasAccess('lihat.periode')
+                        || $u->hasAccess('lihat.fakultas')
+                        || $u->hasAccess('lihat.pegawai')
+                        || $u->hasAccess('lihat.provinsi')
+                        || $u->hasAccess('lihat.kabupaten')
+                        || $u->hasAccess('lihat.kecamatan')
+                        || $u->hasAccess('lihat.desa');
+
+                    $hasManajemenUsers = $u->hasAccess('lihat.user')
+                        || $u->hasAccess('lihat.role')
+                        || $u->hasAccess('lihat.manajemen-acces')
+                        || $u->hasAccess('lihat.role-user');
+
+                    $hasSetupKegiatan = $u->hasAccess('tambah.kegiatan')
+                        || $u->hasAccess('lihat.kegiatan');
+
+                    $hasMenuUtama = true; // dashboard selalu ada
+                @endphp
+
                 <div class="nav-section-title">Menu Utama</div>
-                <a href="{{ route('dashboard') }}" class="nav-item" data-page="index" onclick="closeSidebarMobile()">
+
+                <a href="{{ route('dashboard') }}" class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}" data-page="index" onclick="closeSidebarMobile()">
                     <i class="fas fa-home"></i>
                     <span>Dashboard</span>
                 </a>
 
-                <!-- Menu dengan Submenu -->
+                {{-- Master Data --}}
+                @if($hasMasterData)
                 <div class="nav-item nav-item-has-children" onclick="toggleSubmenu(event, 'submenu-akademik')">
-                    <div style="display: flex; align-items: center; width: 100%;">
-                        <i class="fas fa-book" style="width: 20px; margin-right: 12px; font-size: 16px;"></i>
+                    <div style="display:flex;align-items:center;width:100%;">
+                        <i class="fas fa-book" style="width:20px;margin-right:12px;font-size:16px;"></i>
                         <span>Master Data</span>
                     </div>
                     <i class="fas fa-chevron-down toggle-arrow"></i>
                 </div>
                 <div class="submenu" id="submenu-akademik">
-                    @if(auth()->user()->hasAccess('lihat.jenis-kka'))
+                    @if($u->hasAccess('lihat.jenis-kka'))
                     <a href="{{ route('jenis-kka.index') }}" class="submenu-item {{ request()->routeIs('jenis-kka.*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                        <i class="fas fa-list"></i>
-                        <span>Jenis KKA</span>
+                        <i class="fas fa-list"></i><span>Jenis KKA</span>
                     </a>
                     @endif
-                    @if(auth()->user()->hasAccess('lihat.tahun'))
+                    @if($u->hasAccess('lihat.tahun'))
                     <a href="{{ route('tahun.index') }}" class="submenu-item {{ request()->routeIs('tahun.*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                        <i class="fas fa-calendar-alt"></i>
-                        <span>Tahun</span>
+                        <i class="fas fa-calendar-alt"></i><span>Tahun</span>
                     </a>
                     @endif
-                    @if(auth()->user()->hasAccess('lihat.periode'))
+                    @if($u->hasAccess('lihat.periode'))
                     <a href="{{ route('periode.index') }}" class="submenu-item {{ request()->routeIs('periode.*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                        <i class="fas fa-calendar-check"></i>
-                        <span>Periode</span>
+                        <i class="fas fa-calendar-check"></i><span>Periode</span>
                     </a>
                     @endif
-                    
+                    @if($u->hasAccess('lihat.fakultas'))
                     <a href="{{ route('fakultas.index') }}" class="submenu-item {{ request()->routeIs('fakultas.*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                        <i class="fas fa-building"></i>
-                        <span>Fakultas</span>
+                        <i class="fas fa-building"></i><span>Fakultas</span>
                     </a>
-                    
                     <a href="{{ route('program-studi.index') }}" class="submenu-item {{ request()->routeIs('program-studi.*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                        <i class="fas fa-graduation-cap"></i>
-                        <span>Program Studi</span>
+                        <i class="fas fa-graduation-cap"></i><span>Program Studi</span>
                     </a>
-                    
-                    @if(auth()->user()->hasAccess('lihat.pegawai'))
+                    @endif
+                    @if($u->hasAccess('lihat.pegawai'))
                     <a href="{{ route('pegawai.index') }}" class="submenu-item {{ request()->routeIs('pegawai.*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                        <i class="fas fa-user-tie"></i>
-                        <span>Pegawai</span>
+                        <i class="fas fa-user-tie"></i><span>Pegawai</span>
                     </a>
                     @endif
-                    @if(auth()->user()->hasAccess('lihat.provinsi'))
+                    @if($u->hasAccess('lihat.provinsi'))
                     <a href="{{ route('provinsi.index') }}" class="submenu-item {{ request()->routeIs('provinsi.*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                        <i class="fas fa-map"></i>
-                        <span>Provinsi</span>
+                        <i class="fas fa-map"></i><span>Provinsi</span>
                     </a>
                     @endif
-                    @if(auth()->user()->hasAccess('lihat.kabupaten'))
+                    @if($u->hasAccess('lihat.kabupaten'))
                     <a href="{{ route('kabupaten.index') }}" class="submenu-item {{ request()->routeIs('kabupaten.*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                        <i class="fas fa-city"></i>
-                        <span>Kabupaten/Kota</span>
+                        <i class="fas fa-city"></i><span>Kabupaten/Kota</span>
                     </a>
                     @endif
-                    @if(auth()->user()->hasAccess('lihat.kecamatan'))
+                    @if($u->hasAccess('lihat.kecamatan'))
                     <a href="{{ route('kecamatan.index') }}" class="submenu-item {{ request()->routeIs('kecamatan.*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                        <i class="fas fa-map-signs"></i>
-                        <span>Kecamatan</span>
+                        <i class="fas fa-map-signs"></i><span>Kecamatan</span>
                     </a>
                     @endif
-                    @if(auth()->user()->hasAccess('lihat.desa'))
+                    @if($u->hasAccess('lihat.desa'))
                     <a href="{{ route('desa.index') }}" class="submenu-item {{ request()->routeIs('desa.*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                        <i class="fas fa-home"></i>
-                        <span>Desa/Kelurahan</span>
+                        <i class="fas fa-home"></i><span>Desa/Kelurahan</span>
                     </a>
                     @endif
                 </div>
+                @endif
 
-                <!-- Menu dengan Submenu -->
+                {{-- Manajemen Users --}}
+                @if($hasManajemenUsers)
                 <div class="nav-item nav-item-has-children" onclick="toggleSubmenu(event, 'submenu-mahasiswa')">
-                    <div style="display: flex; align-items: center; width: 100%;">
-                        <i class="fas fa-users" style="width: 20px; margin-right: 12px; font-size: 16px;"></i>
+                    <div style="display:flex;align-items:center;width:100%;">
+                        <i class="fas fa-users" style="width:20px;margin-right:12px;font-size:16px;"></i>
                         <span>Manajemen Users</span>
                     </div>
                     <i class="fas fa-chevron-down toggle-arrow"></i>
                 </div>
                 <div class="submenu" id="submenu-mahasiswa">
-                    @if(auth()->user()->hasAccess('lihat.user'))
+                    @if($u->hasAccess('lihat.user'))
                     <a href="{{ route('users.index') }}" class="submenu-item {{ request()->routeIs('users.*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                        <i class="fas fa-user"></i>
-                        <span>Users</span>
+                        <i class="fas fa-user"></i><span>Users</span>
                     </a>
                     @endif
-                    
-                    @if(auth()->user()->hasAccess('lihat.role'))
-                        <a href="{{ route('role.index') }}" class="submenu-item {{ request()->routeIs('role.*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                            <i class="fas fa-user-tag"></i>
-                            <span>Role</span>
-                        </a>
+                    @if($u->hasAccess('lihat.role'))
+                    <a href="{{ route('role.index') }}" class="submenu-item {{ request()->routeIs('role.*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
+                        <i class="fas fa-user-tag"></i><span>Role</span>
+                    </a>
                     @endif
+                    @if($u->hasAccess('lihat.manajemen-acces'))
                     <a href="{{ route('access.index') }}" class="submenu-item {{ request()->routeIs('access.*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                        <i class="fas fa-shield-alt"></i>
-                        <span>Manajemen Access</span>
+                        <i class="fas fa-shield-alt"></i><span>Manajemen Access</span>
                     </a>
+                    @endif
+                    @if($u->hasAccess('lihat.role-user'))
                     <a href="{{ route('user-role.index') }}" class="submenu-item {{ request()->routeIs('user-role.*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                        <i class="fas fa-id-badge"></i>
-                        <span>User Roles</span>
+                        <i class="fas fa-id-badge"></i><span>User Roles</span>
                     </a>
+                    @endif
                 </div>
+                @endif
 
-                <!-- Menu dengan Submenu -->
+                {{-- Setup Kegiatan --}}
+                @if($hasSetupKegiatan)
                 <div class="nav-item nav-item-has-children" onclick="toggleSubmenu(event, 'submenu-dosen')">
-                    <div style="display: flex; align-items: center; width: 100%;">
-                        <i class="fas fa-cogs" style="width: 20px; margin-right: 12px; font-size: 16px;"></i>
+                    <div style="display:flex;align-items:center;width:100%;">
+                        <i class="fas fa-cogs" style="width:20px;margin-right:12px;font-size:16px;"></i>
                         <span>Setup Kegiatan</span>
                     </div>
                     <i class="fas fa-chevron-down toggle-arrow"></i>
                 </div>
                 <div class="submenu" id="submenu-dosen">
+                    @if($u->hasAccess('tambah.kegiatan'))
                     <a href="{{ route('kegiatan.create') }}" class="submenu-item {{ request()->routeIs('kegiatan.create') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                        <i class="fas fa-plus-circle"></i>
-                        <span>Tambah Kegiatan</span>
+                        <i class="fas fa-plus-circle"></i><span>Tambah Kegiatan</span>
                     </a>
-                    @if(auth()->user()->hasAccess('lihat.kegiatan'))
+                    @endif
+                    @if($u->hasAccess('lihat.kegiatan'))
                     <a href="{{ route('kegiatan.berlangsung') }}" class="submenu-item {{ request()->routeIs('kegiatan.berlangsung') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                        <i class="fas fa-clock"></i>
-                        <span>Sedang Dilaksanakan</span>
+                        <i class="fas fa-clock"></i><span>Sedang Dilaksanakan</span>
                     </a>
                     <a href="{{ route('kegiatan.selesai') }}" class="submenu-item {{ request()->routeIs('kegiatan.selesai') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Selesai Dilaksanakan</span>
+                        <i class="fas fa-check-circle"></i><span>Selesai Dilaksanakan</span>
                     </a>
                     @endif
                 </div>
+                @endif
 
-                
+                {{-- ── SURVEY ───────────────────────────────────────────── --}}
+                @if($u->hasAccess('lihat.survey'))
                 <div class="nav-section-title">Survey</div>
-                
-                <!-- Menu Pendaftaran -->
+
                 <div class="nav-item nav-item-has-children" onclick="toggleSubmenu(event, 'submenu-survey')">
-                    <div style="display: flex; align-items: center; width: 100%;">
-                        <i class="fas fa-map-marker-alt" style="width: 20px; margin-right: 12px; font-size: 16px;"></i>
+                    <div style="display:flex;align-items:center;width:100%;">
+                        <i class="fas fa-map-marker-alt" style="width:20px;margin-right:12px;font-size:16px;"></i>
                         <span>Survey Lokasi</span>
                     </div>
                     <i class="fas fa-chevron-down toggle-arrow"></i>
                 </div>
                 <div class="submenu" id="submenu-survey">
-                    @if(auth()->user()->hasAccess('lihat.survey'))
                     <a href="{{ route('survey.index') }}" class="submenu-item {{ request()->routeIs('survey.index') || request()->routeIs('survey.isi') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                        <i class="fas fa-users"></i>
-                        <span>TIM Survey</span>
+                        <i class="fas fa-users"></i><span>TIM Survey</span>
                     </a>
                     <a href="{{ route('survey.hasil') }}" class="submenu-item {{ request()->routeIs('survey.hasil') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                        <i class="fas fa-clipboard-check"></i>
-                        <span>Hasil Survey</span>
+                        <i class="fas fa-clipboard-check"></i><span>Hasil Survey</span>
                     </a>
                 </div>
+                @endif
 
-                
-                @if(auth()->user()->hasAccess('lihat.dosen-pembimbing'))
+                {{-- ── DPL ──────────────────────────────────────────────── --}}
+                @if($u->hasAccess('lihat.dosen-pembimbing'))
                 <div class="nav-section-title">DPL</div>
-
                 <a href="{{ route('dosen-pembimbing.index') }}" class="nav-item {{ request()->routeIs('dosen-pembimbing.*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
                     <i class="fas fa-user-graduate"></i>
                     <span>Dosen Pembimbing</span>
                 </a>
                 @endif
 
+                {{-- ── AKADEMIK ─────────────────────────────────────────── --}}
+                @php
+                    $hasPendaftaran = $u->hasAccess('lihat.registrasi')
+                        || $u->hasAccess('lihat.dokumen-pembayaran')
+                        || $u->hasAccess('lihat.sertifikat')
+                        || $u->hasAccess('lihat.dokumen-lainnya')
+                        || $u->hasAccess('lihat.terverifikasi');
+
+                    // Peserta & DPL selalu tampil (tidak perlu permission khusus)
+                    $hasPelaksanaan = true;
+
+                    // $hasPelaksanaan selalu true (Peserta & DPL tanpa guard)
+                    $hasAkademik = true;
+                @endphp
+
+                @if($hasAkademik)
                 <div class="nav-section-title">Akademik</div>
-                
-                <!-- Menu Pendaftaran -->
+
+                @if($hasPendaftaran)
                 <div class="nav-item nav-item-has-children" onclick="toggleSubmenu(event, 'submenu-nilai')">
-                    <div style="display: flex; align-items: center; width: 100%;">
-                        <i class="fas fa-graduation-cap" style="width: 20px; margin-right: 12px; font-size: 16px;"></i>
+                    <div style="display:flex;align-items:center;width:100%;">
+                        <i class="fas fa-graduation-cap" style="width:20px;margin-right:12px;font-size:16px;"></i>
                         <span>Pendaftaran</span>
                     </div>
                     <i class="fas fa-chevron-down toggle-arrow"></i>
                 </div>
                 <div class="submenu" id="submenu-nilai">
-                    @if(auth()->user()->hasAccess('lihat.registrasi'))
+                    @if($u->hasAccess('lihat.registrasi'))
                     <a href="{{ route('registrasi.index') }}" class="submenu-item {{ request()->routeIs('registrasi.index') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                        <i class="fas fa-user-check"></i>
-                        <span>Registrasi</span>
+                        <i class="fas fa-user-check"></i><span>Registrasi</span>
                     </a>
                     <a href="{{ route('registrasi.disetujui') }}" class="submenu-item {{ request()->routeIs('registrasi.disetujui') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Disetujui Prodi</span>
+                        <i class="fas fa-check-circle"></i><span>Disetujui Prodi</span>
                     </a>
                     @endif
-                    @if(auth()->user()->hasAccess('lihat.dokumen-pembayaran'))
+                    @if($u->hasAccess('lihat.dokumen-pembayaran'))
                     <a href="{{ route('dokumen.pembayaran') }}" class="submenu-item {{ request()->routeIs('dokumen.pembayaran*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                        <i class="fas fa-money-bill-wave"></i>
-                        <span>Bukti Pembayaran</span>
+                        <i class="fas fa-money-bill-wave"></i><span>Bukti Pembayaran</span>
                     </a>
                     @endif
-                    @if(auth()->user()->hasAccess('lihat.sertifikat'))
+                    @if($u->hasAccess('lihat.sertifikat'))
                     <a href="{{ route('dokumen.sertifikat') }}" class="submenu-item {{ request()->routeIs('dokumen.sertifikat*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                        <i class="fas fa-quran"></i>
-                        <span>Sertifikat Baca Quran</span>
+                        <i class="fas fa-quran"></i><span>Sertifikat Baca Quran</span>
                     </a>
                     @endif
-                    @if(auth()->user()->hasAccess('lihat.dokumen-lainnya'))
+                    @if($u->hasAccess('lihat.dokumen-lainnya'))
                     <a href="{{ route('dokumen.lainnya') }}" class="submenu-item {{ request()->routeIs('dokumen.lainnya*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                        <i class="fas fa-file-alt"></i>
-                        <span>Verifikasi Dokumen</span>
+                        <i class="fas fa-file-alt"></i><span>Verifikasi Dokumen</span>
                     </a>
                     @endif
-                    @if(auth()->user()->hasAccess('lihat.terverifikasi'))
+                    @if($u->hasAccess('lihat.terverifikasi'))
                     <a href="{{ route('dokumen.terverifikasi') }}" class="submenu-item {{ request()->routeIs('dokumen.terverifikasi*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                        <i class="fas fa-check-double"></i>
-                        <span>Terverifikasi</span>
+                        <i class="fas fa-check-double"></i><span>Terverifikasi</span>
                     </a>
                     @endif
                 </div>
+                @endif
 
-                <!-- Menu Pelaksanaan -->
+                @if($hasPelaksanaan)
                 <div class="nav-item nav-item-has-children" onclick="toggleSubmenu(event, 'submenu-pelaksanaan')">
-                    <div style="display: flex; align-items: center; width: 100%;">
-                        <i class="fas fa-tasks" style="width: 20px; margin-right: 12px; font-size: 16px;"></i>
+                    <div style="display:flex;align-items:center;width:100%;">
+                        <i class="fas fa-tasks" style="width:20px;margin-right:12px;font-size:16px;"></i>
                         <span>Pelaksanaan</span>
                     </div>
                     <i class="fas fa-chevron-down toggle-arrow"></i>
                 </div>
                 <div class="submenu" id="submenu-pelaksanaan">
-                    @endif
-                    @if(auth()->user()->hasAccess('lihat.data-lokasi'))
+                    @if($u->hasAccess('lihat.data-lokasi'))
                     <a href="{{ route('survey.data-lokasi') }}" class="submenu-item {{ request()->routeIs('survey.data-lokasi') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                        <i class="fas fa-map-marked-alt"></i>
-                        <span>Data Lokasi</span>
+                        <i class="fas fa-map-marked-alt"></i><span>Data Lokasi</span>
                     </a>
                     @endif
                     <a href="{{ route('peserta.index') }}" class="submenu-item {{ request()->routeIs('peserta.*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                        <i class="fas fa-user-graduate"></i>
-                        <span>Peserta</span>
+                        <i class="fas fa-user-graduate"></i><span>Peserta</span>
                     </a>
                     <a href="{{ route('dpl.index') }}" class="submenu-item {{ request()->routeIs('dpl.*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
-                        <i class="fas fa-chalkboard-teacher"></i>
-                        <span>Dosen Pembimbing</span>
-                    </a>
-                    <a href="#" class="submenu-item" onclick="closeSidebarMobile()">
-                        <i class="fas fa-user-tie"></i>
-                        <span>Supervisor</span>
+                        <i class="fas fa-chalkboard-teacher"></i><span>Dosen Pembimbing</span>
                     </a>
                 </div>
+                @endif
+                @endif
 
-
+                {{-- ── DATA KKA ─────────────────────────────────────────── --}}
+                @if($u->hasAccess('lihat.kegiatan'))
                 <div class="nav-section-title">Data KKA</div>
-
-                @if(auth()->user()->hasAccess('lihat.kegiatan'))
                 <a href="{{ route('kegiatan.index') }}" class="nav-item {{ request()->routeIs('kegiatan.*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
                     <i class="fas fa-clipboard-list"></i>
                     <span>Kegiatan</span>
                 </a>
                 @endif
+
+                {{-- ── INFORMASI ────────────────────────────────────────── --}}
+                @if($u->hasAccess('lihat.berita') || $u->hasAccess('lihat.pengumuman'))
+                <div class="nav-section-title">Informasi</div>
+                <div class="nav-item nav-item-has-children" onclick="toggleSubmenu(event, 'submenu-informasi')">
+                    <div style="display:flex;align-items:center;width:100%;">
+                        <i class="fas fa-bell" style="width:20px;margin-right:12px;font-size:16px;"></i>
+                        <span>Informasi</span>
+                    </div>
+                    <i class="fas fa-chevron-down toggle-arrow"></i>
+                </div>
+                <div class="submenu" id="submenu-informasi">
+                    @if($u->hasAccess('lihat.berita'))
+                    <a href="{{ route('berita.index') }}" class="submenu-item {{ request()->routeIs('berita.*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
+                        <i class="fas fa-newspaper"></i><span>Berita</span>
+                    </a>
+                    @endif
+                    @if($u->hasAccess('lihat.pengumuman'))
+                    <a href="{{ route('pengumuman.index') }}" class="submenu-item {{ request()->routeIs('pengumuman.*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
+                        <i class="fas fa-bullhorn"></i><span>Pengumuman</span>
+                    </a>
+                    @endif
+                </div>
+                @endif
+
+                {{-- ── HALAMAN PUBLIK ───────────────────────────────────── --}}
+                @if($u->hasAccess('lihat.menu') || $u->hasAccess('lihat.halaman'))
+                <div class="nav-section-title">Halaman Publik</div>
+                <div class="nav-item nav-item-has-children" onclick="toggleSubmenu(event, 'submenu-halaman-publik')">
+                    <div style="display:flex;align-items:center;width:100%;">
+                        <i class="fas fa-globe" style="width:20px;margin-right:12px;font-size:16px;"></i>
+                        <span>Halaman Publik</span>
+                    </div>
+                    <i class="fas fa-chevron-down toggle-arrow"></i>
+                </div>
+                <div class="submenu" id="submenu-halaman-publik">
+                    @if($u->hasAccess('lihat.menu'))
+                    <a href="{{ route('menu.index') }}" class="submenu-item {{ request()->routeIs('menu.*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
+                        <i class="fas fa-bars"></i><span>Menu Navigasi</span>
+                    </a>
+                    @endif
+                    @if($u->hasAccess('lihat.halaman'))
+                    <a href="{{ route('halaman.index') }}" class="submenu-item {{ request()->routeIs('halaman.*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
+                        <i class="fas fa-file-lines"></i><span>Halaman Konten</span>
+                    </a>
+                    @endif
+                </div>
+                @endif
+
             </nav>
 
             <div class="sidebar-footer">

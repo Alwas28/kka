@@ -73,8 +73,8 @@ class KelompokController extends Controller
         $namaDesa    = $survey->desa?->nama ?? 'lokasi KKA';
         $noKelompok  = $survey->kelompok;
 
-        // Naikkan level ke 6 (Kelompok Tersedia) jika masih di level 5
-        if ($mahasiswa->mahasiswa_level_id == 5) {
+        // Naikkan level ke 6 (Pelaksanaan) jika belum di level 6+
+        if ($mahasiswa->mahasiswa_level_id < 6) {
             $mahasiswa->update(['mahasiswa_level_id' => 6]);
         }
 
@@ -99,6 +99,15 @@ class KelompokController extends Controller
         $this->authorizeSetup();
 
         $survey->peserta()->detach($mahasiswa->id);
+
+        // Jika tidak lagi ada di kelompok manapun, kembalikan ke level 5
+        $masihDiKelompok = \DB::table('kelompok_mahasiswa')
+            ->where('mahasiswa_id', $mahasiswa->id)
+            ->exists();
+
+        if (!$masihDiKelompok && $mahasiswa->mahasiswa_level_id == 6) {
+            $mahasiswa->update(['mahasiswa_level_id' => 5]);
+        }
 
         return back()->with('success', 'Mahasiswa berhasil dikeluarkan dari kelompok.');
     }

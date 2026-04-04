@@ -86,8 +86,12 @@ class MahasiswaPendaftaranController extends Controller
     {
         $mahasiswa = Auth::guard('mahasiswa')->user();
 
-        abort_if($mahasiswa->mahasiswa_level_id < 2, 403, 'Anda belum disetujui prodi.');
-        abort_if($mahasiswa->mahasiswa_level_id >= 3, 422, 'Pendaftaran sudah dikirim dan tidak dapat diubah.');
+        if ($mahasiswa->mahasiswa_level_id < 2) {
+            return back()->with('error', 'Anda belum disetujui prodi.');
+        }
+        if ($mahasiswa->mahasiswa_level_id >= 3) {
+            return back()->with('error', 'Pendaftaran sudah dikirim dan tidak dapat diubah.');
+        }
 
         $rules = [
             'kegiatan_id'        => 'required|exists:kegiatan,id',
@@ -247,11 +251,15 @@ class MahasiswaPendaftaranController extends Controller
         $pendaftaran = $mahasiswa->pendaftaran;
         $level       = $mahasiswa->mahasiswa_level_id;
 
-        abort_if(!$pendaftaran, 422, 'Pendaftaran belum lengkap.');
+        if (!$pendaftaran) {
+            return back()->with('error', 'Silakan isi dan simpan form pendaftaran terlebih dahulu sebelum mengirim.');
+        }
 
         if ($level == 2) {
             // Kirim pertama kali
-            abort_if($pendaftaran->status !== 'draft', 422, 'Pendaftaran belum lengkap.');
+            if ($pendaftaran->status !== 'draft') {
+                return back()->with('error', 'Pendaftaran Anda sudah pernah dikirim sebelumnya.');
+            }
 
             $dokumenWajibIds = KegiatanDokumen::where('kegiatan_id', $pendaftaran->kegiatan_id)
                 ->where('kategori', 'pendaftaran')
@@ -296,7 +304,7 @@ class MahasiswaPendaftaranController extends Controller
                 ->with('success', 'Pendaftaran berhasil dikirim ulang! Silakan menunggu verifikasi dokumen.');
 
         } else {
-            abort(422, 'Tidak dapat mengirim pendaftaran pada tahap ini.');
+            return back()->with('error', 'Tidak dapat mengirim pendaftaran pada tahap ini.');
         }
     }
 }

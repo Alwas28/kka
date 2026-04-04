@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Mahasiswa;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 
 class RegistrasiMahasiswaController extends Controller
@@ -19,7 +20,7 @@ class RegistrasiMahasiswaController extends Controller
 
         $user = auth()->user();
         $user->load('programStudi');
-        $isAllProdi = $user->programStudi->isEmpty();
+        $isAllProdi = $this->isAllProdi($user);
 
         $query = Mahasiswa::with(['programStudi.fakultas', 'level'])
             ->where('mahasiswa_level_id', 1);
@@ -42,7 +43,7 @@ class RegistrasiMahasiswaController extends Controller
 
         $user = auth()->user();
         $user->load('programStudi');
-        $isAllProdi = $user->programStudi->isEmpty();
+        $isAllProdi = $this->isAllProdi($user);
 
         $query = Mahasiswa::with(['programStudi.fakultas', 'level', 'pendaftaran'])
             ->where('mahasiswa_level_id', 2);
@@ -68,7 +69,44 @@ class RegistrasiMahasiswaController extends Controller
 
         $mahasiswa->update(['mahasiswa_level_id' => 2]);
 
+        DB::table('mahasiswa_notifikasi')->insert([
+            'mahasiswa_id' => $mahasiswa->id,
+            'judul'        => 'Registrasi Disetujui',
+            'pesan'        => 'Registrasi KKA Anda telah disetujui oleh Program Studi. Silakan lengkapi form pendaftaran.',
+            'ikon'         => 'fa-check-circle',
+            'warna'        => '#059669',
+            'url'          => null,
+            'created_at'   => now(),
+            'updated_at'   => now(),
+        ]);
+
         return back()->with('success', "Registrasi <strong>{$mahasiswa->nama}</strong> telah disetujui. Mahasiswa dapat melanjutkan pengisian pendaftaran.");
+    }
+
+    /**
+     * Batalkan persetujuan → kembalikan ke level 1 (Registrasi).
+     */
+    public function kembalikan(Mahasiswa $mahasiswa)
+    {
+        abort_unless(auth()->user()->hasAccess('validasi.register'), 403, 'Anda tidak memiliki akses untuk memvalidasi registrasi.');
+        $this->otorisasiProdi($mahasiswa);
+
+        abort_if($mahasiswa->mahasiswa_level_id !== 2, 422, 'Mahasiswa ini tidak berada di level Disetujui Prodi.');
+
+        $mahasiswa->update(['mahasiswa_level_id' => 1]);
+
+        DB::table('mahasiswa_notifikasi')->insert([
+            'mahasiswa_id' => $mahasiswa->id,
+            'judul'        => 'Registrasi Dikembalikan',
+            'pesan'        => 'Persetujuan registrasi KKA Anda telah dibatalkan oleh Program Studi. Silakan hubungi prodi untuk informasi lebih lanjut.',
+            'ikon'         => 'fa-rotate-left',
+            'warna'        => '#dc2626',
+            'url'          => null,
+            'created_at'   => now(),
+            'updated_at'   => now(),
+        ]);
+
+        return back()->with('success', "Persetujuan <strong>{$mahasiswa->nama}</strong> telah dibatalkan. Mahasiswa dikembalikan ke daftar registrasi.");
     }
 
     /**
@@ -92,20 +130,35 @@ class RegistrasiMahasiswaController extends Controller
     // ────────────────────────────────────────────
 
     /**
+     * Apakah user bisa melihat semua prodi:
+     * - tidak ada prodi terkait, ATAU
+     * - punya role Administrator
+     */
+    private function isAllProdi($user = null): bool
+    {
+        $user = $user ?? auth()->user();
+        $user->loadMissing('programStudi');
+        if ($user->programStudi->isEmpty()) {
+            return true;
+        }
+        return $user->roles()->where('nama', 'Administrator')->exists();
+    }
+
+    /**
      * Pastikan mahasiswa yang divalidasi berada di prodi yang menjadi tanggung jawab user.
-     * Jika user tidak memiliki prodi (administrator), semua prodi diizinkan.
+     * Jika user Administrator atau tidak memiliki prodi, semua prodi diizinkan.
      */
     private function otorisasiProdi(Mahasiswa $mahasiswa): void
     {
         $user = auth()->user();
-        $user->loadMissing('programStudi');
-
-        if ($user->programStudi->isNotEmpty()) {
-            abort_unless(
-                $user->programStudi->pluck('id')->contains($mahasiswa->program_studi_id),
-                403,
-                'Anda tidak berwenang memvalidasi mahasiswa dari program studi ini.'
-            );
+        if ($this->isAllProdi($user)) {
+            return;
         }
+
+        abort_unless(
+            $user->programStudi->pluck('id')->contains($mahasiswa->program_studi_id),
+            403,
+            'Anda tidak berwenang memvalidasi mahasiswa dari program studi ini.'
+        );
     }
 }

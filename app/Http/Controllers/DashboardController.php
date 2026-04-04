@@ -39,6 +39,12 @@ class DashboardController extends Controller
         $totalKelompok   = DB::table('survey_lokasi')->whereNotNull('kegiatan_id')->count();
         $totalMahasiswaKelompok = DB::table('kelompok_mahasiswa')->distinct('mahasiswa_id')->count('mahasiswa_id');
 
+        // ── BERITA & PENGUMUMAN ───────────────────────────────────────────────
+        $totalBerita     = DB::table('berita')->count();
+        $beritaPublished = DB::table('berita')->where('status', 'published')->count();
+        $totalPengumuman = DB::table('pengumuman')->count();
+        $pengumumanAktif = DB::table('pengumuman')->where('status', 'aktif')->count();
+
         // ── PELAKSANAAN ───────────────────────────────────────────────────────
         $totalLogbook        = DB::table('logbook')->count();
         $totalLaporanIndividu = DB::table('laporan_individu')->count();
@@ -143,6 +149,7 @@ class DashboardController extends Controller
             'dokumenPending', 'dokumenDiterima', 'dokumenDitolak',
             'surveyBelum', 'surveySudah', 'surveySetuju', 'surveyDitolak', 'totalSurvey',
             'totalKelompok', 'totalMahasiswaKelompok',
+            'totalBerita', 'beritaPublished', 'totalPengumuman', 'pengumumanAktif',
             'totalLogbook', 'totalLaporanIndividu', 'totalLaporanAkhir', 'totalDinilai',
             'kegiatanBerlangsung', 'pesertaPerKegiatan', 'kelompokPerKegiatan',
             'logbookPerKegiatan', 'nilaiPerKegiatan', 'tahapanAktif',

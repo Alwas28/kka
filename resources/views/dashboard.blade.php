@@ -326,6 +326,30 @@
             </div>
         </div>
 
+        {{-- Berita --}}
+        @if(auth()->user()->hasAccess('lihat.berita'))
+        <div class="stat-card blue">
+            <div class="stat-icon blue"><i class="fas fa-newspaper"></i></div>
+            <div class="stat-body">
+                <div class="stat-value">{{ $totalBerita }}</div>
+                <div class="stat-label">Total Berita</div>
+                <div class="stat-sub">{{ $beritaPublished }} published &middot; {{ $totalBerita - $beritaPublished }} draft</div>
+            </div>
+        </div>
+        @endif
+
+        {{-- Pengumuman --}}
+        @if(auth()->user()->hasAccess('lihat.pengumuman'))
+        <div class="stat-card green">
+            <div class="stat-icon green"><i class="fas fa-bullhorn"></i></div>
+            <div class="stat-body">
+                <div class="stat-value">{{ $pengumumanAktif }}</div>
+                <div class="stat-label">Pengumuman Aktif</div>
+                <div class="stat-sub">dari {{ $totalPengumuman }} total pengumuman</div>
+            </div>
+        </div>
+        @endif
+
     </div>{{-- /stats-row --}}
 
     {{-- ── Kegiatan Berlangsung ──────────────────────────────── --}}

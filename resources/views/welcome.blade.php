@@ -3,7 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem KKA – Universitas Mulawarman Kendari</title>
+    <title>Sistem KKA – Universitas Muhammadiyah Kendari</title>
+    <meta name="description" content="Platform digital untuk mengelola seluruh proses KKA — pendaftaran mahasiswa, pembentukan kelompok, pelaksanaan, hingga penilaian akhir.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ url('/') }}">
+
+    {{-- Open Graph --}}
+    <meta property="og:type"        content="website">
+    <meta property="og:site_name"   content="KKA UM Kendari">
+    <meta property="og:title"       content="Sistem KKA – Universitas Muhammadiyah Kendari">
+    <meta property="og:description" content="Platform digital untuk mengelola seluruh proses KKA — pendaftaran mahasiswa, pembentukan kelompok, pelaksanaan, hingga penilaian akhir.">
+    <meta property="og:url"         content="{{ url('/') }}">
+    <meta property="og:image"       content="{{ asset('img/logo2.png') }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+
+    {{-- Twitter Card --}}
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="Sistem KKA – Universitas Muhammadiyah Kendari">
+    <meta name="twitter:description" content="Platform digital untuk mengelola seluruh proses KKA — pendaftaran mahasiswa, pembentukan kelompok, pelaksanaan, hingga penilaian akhir.">
+    <meta name="twitter:image"       content="{{ asset('img/logo2.png') }}">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -39,12 +59,14 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 16px;
         }
         .navbar-brand {
             display: flex;
             align-items: center;
             gap: 12px;
             text-decoration: none;
+            flex-shrink: 0;
         }
         .navbar-brand img {
             height: 38px;
@@ -54,7 +76,32 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-shrink: 0;
         }
+
+        /* ── DYNAMIC NAV MENUS ────────────────────────────────────── */
+        .nav-menus { display:flex; align-items:center; gap:2px; flex:1; justify-content:center; flex-wrap:wrap; }
+        .nav-menu-link { padding:6px 13px; border-radius:7px; font-size:13px; font-weight:600; color:var(--text-primary); text-decoration:none; transition:background .15s,color .15s; white-space:nowrap; }
+        .nav-menu-link:hover { background:rgba(165,42,42,.08); color:var(--maroon-main); }
+        .nav-dropdown { position:relative; }
+        .nav-dropdown-btn { padding:6px 13px; border-radius:7px; font-size:13px; font-weight:600; color:var(--text-primary); background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:5px; font-family:inherit; white-space:nowrap; transition:background .15s,color .15s; }
+        .nav-dropdown-btn:hover { background:rgba(165,42,42,.08); color:var(--maroon-main); }
+        .nav-dropdown-panel { display:none; position:absolute; top:calc(100%+6px); left:0; background:#fff; border:1px solid var(--gray-border); border-radius:10px; min-width:180px; box-shadow:0 8px 24px rgba(0,0,0,.10); z-index:200; padding:6px; }
+        .nav-dropdown:hover .nav-dropdown-panel { display:block; }
+        .nav-dropdown-item { display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:7px; font-size:13px; color:var(--text-primary); text-decoration:none; }
+        .nav-dropdown-item:hover { background:rgba(165,42,42,.07); color:var(--maroon-main); }
+
+        /* ── TICKER (sticky bawah navbar) ────────────────────────── */
+        .ticker-bar { background:#fff8f8; border-bottom:1px solid rgba(165,42,42,.1); padding:0 40px; position:sticky; top:64px; z-index:99; }
+        .ticker-inner { max-width:1200px; margin:0 auto; display:flex; align-items:stretch; min-height:40px; }
+        .ticker-label { display:flex; align-items:center; gap:7px; background:var(--maroon-main); color:#fff; font-size:.7rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:0 14px; white-space:nowrap; flex-shrink:0; }
+        .ticker-scroll { flex:1; overflow:hidden; display:flex; align-items:center; }
+        .ticker-track { display:flex; animation:scrollTicker 30s linear infinite; white-space:nowrap; }
+        .ticker-track:hover { animation-play-state:paused; }
+        .ticker-item { display:inline-flex; align-items:center; gap:6px; font-size:.8rem; color:var(--text-primary); padding:0 24px; border-right:1px solid var(--gray-border); text-decoration:none; transition:color .15s; }
+        .ticker-item:hover { color:var(--maroon-main); }
+        .ticker-penting { color:#ef4444; font-size:.72rem; }
+        @keyframes scrollTicker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
         .btn-outline {
             padding: 8px 20px;
             border: 1.5px solid var(--maroon-main);
@@ -292,6 +339,46 @@
             line-height: 1.6;
         }
 
+        /* ticker CSS sudah didefinisikan di blok NAVBAR di atas */
+
+        /* ── BERITA ───────────────────────────────────────────────── */
+        .berita-section { padding:80px 40px; background:#fff; }
+        .berita-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:24px; max-width:1100px; margin:0 auto; }
+        .berita-card { border-radius:16px; overflow:hidden; border:1px solid var(--gray-border); background:#fff; transition:transform .2s,box-shadow .2s; display:flex; flex-direction:column; }
+        .berita-card:hover { transform:translateY(-4px); box-shadow:0 10px 28px rgba(0,0,0,.10); }
+        .berita-img-wrap { width:100%; height:190px; background:linear-gradient(135deg,#fdf2f2,#fee2e2); display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden; }
+        .berita-img-wrap img { width:100%; height:190px; object-fit:cover; }
+        .berita-img-icon { font-size:3rem; color:var(--maroon-main); opacity:.3; }
+        .berita-body { padding:20px; flex:1; display:flex; flex-direction:column; gap:8px; }
+        .berita-date { font-size:.75rem; color:var(--maroon-main); font-weight:600; }
+        .berita-title { font-size:1rem; font-weight:700; color:var(--text-primary); line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+        .berita-excerpt { font-size:.83rem; color:var(--text-secondary); line-height:1.6; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; flex:1; }
+        .berita-empty { text-align:center; padding:48px; color:var(--text-secondary); font-size:.9rem; }
+        .berita-empty i { font-size:2.5rem; opacity:.25; display:block; margin-bottom:12px; }
+        @media(max-width:600px) { .pengumuman-bar{padding:0 16px;} .berita-section{padding:60px 20px;} }
+
+        /* ── PENGUMUMAN SECTION ───────────────────────────────────── */
+        .peng-section { padding:80px 40px; background:var(--gray-light); }
+        .peng-list { display:flex; flex-direction:column; gap:14px; max-width:860px; margin:0 auto; }
+        .peng-card { background:#fff; border-radius:14px; border:1px solid var(--gray-border); display:flex; align-items:stretch; overflow:hidden; text-decoration:none; color:inherit; transition:transform .2s,box-shadow .2s; }
+        .peng-card:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,.09); }
+        .peng-card-side { width:6px; flex-shrink:0; background:var(--maroon-main); }
+        .peng-card-side.penting { background:#ef4444; }
+        .peng-card-body { padding:18px 20px; flex:1; display:flex; flex-direction:column; gap:6px; }
+        .peng-card-head { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+        .peng-card-badge { font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; padding:2px 10px; border-radius:20px; }
+        .peng-card-badge-aktif   { background:rgba(16,185,129,.1); color:#065f46; border:1px solid rgba(16,185,129,.2); }
+        .peng-card-badge-penting { background:rgba(239,68,68,.1); color:#b91c1c; border:1px solid rgba(239,68,68,.2); }
+        .peng-card-title { font-size:.95rem; font-weight:700; color:var(--text-primary); line-height:1.4; }
+        .peng-card-excerpt { font-size:.82rem; color:var(--text-secondary); line-height:1.5; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+        .peng-card-meta { display:flex; align-items:center; gap:14px; font-size:.75rem; color:var(--text-secondary); margin-top:4px; }
+        .peng-card-meta i { color:var(--maroon-main); }
+        .peng-card-thumb { width:120px; flex-shrink:0; overflow:hidden; }
+        .peng-card-thumb img { width:120px; height:100%; object-fit:cover; }
+        .peng-empty { text-align:center; padding:48px; color:var(--text-secondary); font-size:.9rem; }
+        .peng-empty i { font-size:2.5rem; opacity:.25; display:block; margin-bottom:12px; }
+        @media(max-width:600px) { .peng-section{padding:60px 20px;} .peng-card-thumb{display:none;} }
+
         /* ── HOW IT WORKS ─────────────────────────────────────────── */
         .how {
             padding: 80px 40px;
@@ -430,6 +517,34 @@
     <a class="navbar-brand" href="/">
         <img src="{{ asset('img/logo2.png') }}" alt="UM Kendari">
     </a>
+
+    {{-- Dynamic menus from admin --}}
+    @if($navMenus->isNotEmpty())
+    <div class="nav-menus">
+        @foreach($navMenus as $m)
+            @if($m->children->isEmpty())
+                <a href="{{ $m->url ?? '#' }}" class="nav-menu-link" target="{{ $m->target }}">
+                    @if($m->icon)<i class="{{ $m->icon }}"></i> @endif{{ $m->label }}
+                </a>
+            @else
+                <div class="nav-dropdown">
+                    <button class="nav-dropdown-btn">
+                        @if($m->icon)<i class="{{ $m->icon }}"></i> @endif{{ $m->label }}
+                        <i class="fas fa-chevron-down" style="font-size:10px;opacity:.6;"></i>
+                    </button>
+                    <div class="nav-dropdown-panel">
+                        @foreach($m->children as $c)
+                        <a href="{{ $c->url ?? '#' }}" class="nav-dropdown-item" target="{{ $c->target }}">
+                            @if($c->icon)<i class="{{ $c->icon }}"></i>@endif {{ $c->label }}
+                        </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+        @endforeach
+    </div>
+    @endif
+
     <div class="navbar-actions">
         @auth
             <a href="{{ url('/dashboard') }}" class="btn-solid">
@@ -443,6 +558,31 @@
         @endauth
     </div>
 </nav>
+
+{{-- ── TICKER PENGUMUMAN (sticky bawah navbar) ─────────────── --}}
+@if($pengumumanAktif->isNotEmpty())
+<div class="ticker-bar">
+    <div class="ticker-inner">
+        <div class="ticker-label"><i class="fas fa-bullhorn"></i> Pengumuman</div>
+        <div class="ticker-scroll">
+            <div class="ticker-track">
+                @foreach($pengumumanAktif as $p)
+                <a href="{{ route('pengumuman.show', $p) }}" class="ticker-item">
+                    @if($p->is_penting)<i class="fas fa-exclamation-circle ticker-penting"></i>@endif
+                    {{ $p->judul }}
+                </a>
+                @endforeach
+                @foreach($pengumumanAktif as $p)
+                <a href="{{ route('pengumuman.show', $p) }}" class="ticker-item">
+                    @if($p->is_penting)<i class="fas fa-exclamation-circle ticker-penting"></i>@endif
+                    {{ $p->judul }}
+                </a>
+                @endforeach
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 
 {{-- ── HERO ──────────────────────────────────────────────────── --}}
 <section class="hero">
@@ -538,6 +678,92 @@
     </div>
 </section>
 
+
+{{-- ── BERITA TERBARU ─────────────────────────────────────────── --}}
+<section class="berita-section">
+    <div class="section-label">Informasi</div>
+    <div class="section-title">Berita Terbaru</div>
+    <div class="section-sub">
+        Ikuti perkembangan dan informasi terbaru seputar program KKA.
+    </div>
+
+    @if($beritaTerbaru->isEmpty())
+    <div class="berita-empty">
+        <i class="fas fa-newspaper"></i>
+        <p>Belum ada berita yang dipublikasikan.</p>
+    </div>
+    @else
+    <div class="berita-grid">
+        @foreach($beritaTerbaru as $b)
+        <a href="{{ route('berita.show', $b->slug) }}" class="berita-card" style="text-decoration:none;color:inherit;">
+            <div class="berita-img-wrap">
+                @if($b->gambar)
+                    <img src="{{ Storage::url($b->gambar) }}" alt="{{ $b->judul }}">
+                @else
+                    <i class="fas fa-newspaper berita-img-icon"></i>
+                @endif
+            </div>
+            <div class="berita-body">
+                <div class="berita-date">
+                    <i class="fas fa-calendar-alt"></i>
+                    {{ $b->published_at?->translatedFormat('d F Y') ?? $b->created_at->translatedFormat('d F Y') }}
+                </div>
+                <div class="berita-title">{{ $b->judul }}</div>
+                <div class="berita-excerpt">{{ strip_tags($b->konten) }}</div>
+            </div>
+        </a>
+        @endforeach
+    </div>
+    @endif
+</section>
+
+{{-- ── PENGUMUMAN SECTION ──────────────────────────────────── --}}
+@if($pengumumanAktif->isNotEmpty())
+<section class="peng-section">
+    <div class="section-label">Informasi</div>
+    <div class="section-title">Pengumuman Aktif</div>
+    <div class="section-sub">
+        Informasi dan pengumuman terbaru dari panitia KKA.
+    </div>
+
+    <div class="peng-list">
+        @foreach($pengumumanAktif as $p)
+        <a href="{{ route('pengumuman.show', $p) }}" class="peng-card">
+            <div class="peng-card-side {{ $p->is_penting ? 'penting' : '' }}"></div>
+            <div class="peng-card-body">
+                <div class="peng-card-head">
+                    @if($p->is_penting)
+                    <span class="peng-card-badge peng-card-badge-penting">
+                        <i class="fas fa-exclamation-circle"></i> Penting
+                    </span>
+                    @else
+                    <span class="peng-card-badge peng-card-badge-aktif">
+                        <i class="fas fa-bullhorn"></i> Pengumuman
+                    </span>
+                    @endif
+                </div>
+                <div class="peng-card-title">{{ $p->judul }}</div>
+                <div class="peng-card-excerpt">{{ strip_tags($p->konten) }}</div>
+                <div class="peng-card-meta">
+                    <span><i class="fas fa-calendar-alt"></i> {{ $p->tanggal_mulai->translatedFormat('d F Y') }}</span>
+                    @if($p->tanggal_selesai)
+                    <span><i class="fas fa-calendar-check"></i> s/d {{ $p->tanggal_selesai->translatedFormat('d F Y') }}</span>
+                    @else
+                    <span><i class="fas fa-infinity"></i> Tidak terbatas</span>
+                    @endif
+                </div>
+            </div>
+            @if($p->gambar)
+            <div class="peng-card-thumb">
+                <img src="{{ Storage::url($p->gambar) }}" alt="{{ $p->judul }}">
+            </div>
+            @endif
+        </a>
+        @endforeach
+    </div>
+</section>
+@endif
+
 {{-- ── HOW IT WORKS ──────────────────────────────────────────── --}}
 <section class="how">
     <div class="section-label">Alur Proses</div>
@@ -578,7 +804,7 @@
 <section class="cta-banner">
     <h2>Siap Mengikuti KKA?</h2>
     <p>
-        Daftarkan diri sekarang dan mulai perjalanan pengabdian masyarakat bersama Universitas Mulawarman Kendari.
+        Daftarkan diri sekarang dan mulai perjalanan pengabdian masyarakat bersama Universitas Muhammadiyah Kendari.
     </p>
     <div>
         @guest

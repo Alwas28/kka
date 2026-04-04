@@ -232,10 +232,14 @@ class DokumenVerifikasiController extends Controller
 
     /* ─────────────────────────────────────────── helpers ──── */
 
-    /** Apakah user administrator (tidak terikat prodi) */
+    /** Apakah user bisa melihat semua prodi (tidak ada prodi terkait, atau punya role Administrator) */
     private function isAllProdi(): bool
     {
-        return auth()->user()->programStudi()->doesntExist();
+        $user = auth()->user();
+        if ($user->programStudi()->doesntExist()) {
+            return true;
+        }
+        return $user->roles()->where('nama', 'Administrator')->exists();
     }
 
     /** IDs prodi yang dikaitkan ke user */

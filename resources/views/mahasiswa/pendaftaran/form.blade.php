@@ -126,11 +126,22 @@
     .no-dokumen-info { text-align: center; padding: 24px 16px; color: var(--text-secondary); font-size: 13px; }
     .no-dokumen-info i { font-size: 30px; color: var(--gray-border); display: block; margin-bottom: 10px; }
 
+    /* TABS */
+    .pend-tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--border-light); margin-bottom: 20px; }
+    .pend-tab-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border: none; background: none; font-size: 13px; font-weight: 600; color: var(--text-secondary); cursor: pointer; border-radius: 8px 8px 0 0; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: color .2s, border-color .2s; font-family: inherit; }
+    .pend-tab-btn:hover { color: var(--maroon-main); background: rgba(139,0,0,.04); }
+    .pend-tab-btn.active { color: var(--maroon-main); border-bottom-color: var(--maroon-main); background: rgba(139,0,0,.04); }
+    .pend-tab-btn .tab-badge { display: inline-flex; align-items: center; justify-content: center; background: #ef4444; color: white; border-radius: 10px; font-size: 10px; font-weight: 700; min-width: 18px; height: 18px; padding: 0 5px; }
+    .pend-tab-pane { display: none; }
+    .pend-tab-pane.active { display: block; }
+
     @media (max-width: 768px) {
         .pend-wrap { padding: 16px; }
         .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; }
         .col-span-2, .col-span-3 { grid-column: span 1; }
         .submit-section { flex-direction: column; align-items: flex-start; }
+        .pend-tabs { gap: 2px; }
+        .pend-tab-btn { padding: 9px 12px; font-size: 12px; }
     }
 </style>
 @endsection
@@ -201,6 +212,30 @@
         </div>
     </div>
     @endif
+
+    {{-- TAB NAVIGATION --}}
+    @php
+        $pendingDokCount = 0;
+        if ($pendaftaran && $level == 2) {
+            $pendingDokCount = $dokumenList->filter(fn($d) => $d->is_wajib && !$uploadedDokumen->has($d->id))->count();
+        } elseif ($pendaftaran && $level == 4) {
+            $pendingDokCount = $uploadedDokumen->where('status', 'ditolak')->count();
+        }
+    @endphp
+    <div class="pend-tabs">
+        <button type="button" class="pend-tab-btn active" onclick="switchTab('data-diri', this)">
+            <i class="fas fa-id-card"></i> Data Diri
+        </button>
+        <button type="button" class="pend-tab-btn" onclick="switchTab('upload-dokumen', this)">
+            <i class="fas fa-file-arrow-up"></i> Upload Dokumen
+            @if($pendingDokCount > 0)
+                <span class="tab-badge">{{ $pendingDokCount }}</span>
+            @endif
+        </button>
+    </div>
+
+    {{-- TAB: DATA DIRI --}}
+    <div class="pend-tab-pane active" id="tab-data-diri">
 
     {{-- FORM DATA --}}
     <form id="pendaftaranForm" action="{{ route('mahasiswa.pendaftaran.save') }}" method="POST" autocomplete="off">
@@ -374,9 +409,26 @@
         @if(!$isFormReadOnly)
         <div class="form-actions" style="margin-bottom: 28px;">
             <button type="submit" class="btn btn-primary"><i class="fas fa-floppy-disk"></i> Simpan Data</button>
+            @if($pendaftaran)
+            <button type="button" class="btn btn-outline" onclick="switchTabByName('upload-dokumen')">
+                <i class="fas fa-arrow-right"></i> Lanjut ke Upload Dokumen
+            </button>
+            @endif
         </div>
         @endif
     </form>
+
+    @if(!$pendaftaran && $level == 2)
+    <div style="background:rgba(59,130,246,.07); border:1px solid rgba(59,130,246,.2); border-radius:10px; padding:16px 20px; margin-bottom:24px; font-size:13px; color:#1e40af; display:flex; gap:12px; align-items:center;">
+        <i class="fas fa-circle-info" style="font-size:18px; flex-shrink:0;"></i>
+        <div>Simpan data pendaftaran terlebih dahulu, lalu bagian upload dokumen akan tersedia.</div>
+    </div>
+    @endif
+
+    </div>{{-- end tab-data-diri --}}
+
+    {{-- TAB: UPLOAD DOKUMEN --}}
+    <div class="pend-tab-pane" id="tab-upload-dokumen">
 
     {{-- ═══════════════════════════════════
          UPLOAD DOKUMEN
@@ -524,14 +576,14 @@
     </div>
     @endif
 
-    @endif {{-- end if $pendaftaran --}}
-
-    @if(!$pendaftaran && $level == 2)
+    @else
     <div style="background:rgba(59,130,246,.07); border:1px solid rgba(59,130,246,.2); border-radius:10px; padding:16px 20px; margin-bottom:24px; font-size:13px; color:#1e40af; display:flex; gap:12px; align-items:center;">
         <i class="fas fa-circle-info" style="font-size:18px; flex-shrink:0;"></i>
-        <div>Simpan data pendaftaran terlebih dahulu, lalu bagian upload dokumen akan muncul di bawah.</div>
+        <div>Silakan isi dan simpan <strong>Data Diri</strong> terlebih dahulu untuk dapat mengupload dokumen.</div>
     </div>
-    @endif
+    @endif {{-- end if $pendaftaran --}}
+
+    </div>{{-- end tab-upload-dokumen --}}
 
 </div>
 </div>
@@ -577,6 +629,18 @@
         const checked = document.querySelector('input[name="jenis_kelamin"]:checked');
         if (checked) toggleHamil(checked.value);
     });
+
+    function switchTab(tabName, btn) {
+        document.querySelectorAll('.pend-tab-pane').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.pend-tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + tabName)?.classList.add('active');
+        btn.classList.add('active');
+    }
+    function switchTabByName(tabName) {
+        const btn = document.querySelector('.pend-tab-btn[onclick*="' + tabName + '"]');
+        if (btn) switchTab(tabName, btn);
+    }
+
     function confirmSubmit() { document.getElementById('modal-confirm-submit')?.classList.add('active'); }
     function closeModal() { document.getElementById('modal-confirm-submit')?.classList.remove('active'); }
     document.getElementById('modal-confirm-submit')?.addEventListener('click', function(e) { if (e.target === this) closeModal(); });
