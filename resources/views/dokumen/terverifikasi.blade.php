@@ -72,7 +72,7 @@
     .stat-row { display: flex; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
     .stat-card {
         flex: 1; min-width: 160px;
-        background: var(--bg-card); border: 1px solid var(--border-light);
+        background: var(--bg-card, white); border: 1px solid var(--gray-border);
         border-radius: 10px; padding: 16px 18px;
         display: flex; align-items: center; gap: 14px;
     }
@@ -120,6 +120,13 @@
     .confirm-center p { font-size: 14px; color: var(--text-secondary); margin: 0 0 8px; }
     .confirm-center strong { color: var(--text-primary); }
     .confirm-center small { font-size: 12px; color: var(--text-secondary); }
+
+    @media (max-width: 640px) {
+        .table-toolbar { flex-direction: column; align-items: stretch; }
+        .search-box { max-width: 100%; }
+        .filter-select { width: 100%; }
+        .toolbar-count { margin-left: 0; }
+    }
 </style>
 @endsection
 
@@ -149,55 +156,58 @@
     </div>
     @endif
 
-    @php
-        $prodiCounts = $mahasiswaList->groupBy(fn($m) => $m->programStudi?->nama ?? 'Lainnya')->map->count();
-    @endphp
-
     <div class="stat-row">
         <div class="stat-card">
             <div class="stat-icon green"><i class="fas fa-user-check"></i></div>
             <div>
-                <div class="stat-value">{{ $mahasiswaList->count() }}</div>
+                <div class="stat-value">{{ $statTotal }}</div>
                 <div class="stat-label">Total Terverifikasi</div>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon blue"><i class="fas fa-building-columns"></i></div>
             <div>
-                <div class="stat-value">{{ $prodiCounts->count() }}</div>
+                <div class="stat-value">{{ $statProdi }}</div>
                 <div class="stat-label">Program Studi</div>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon purple"><i class="fas fa-clipboard-list"></i></div>
             <div>
-                <div class="stat-value">{{ $mahasiswaList->pluck('pendaftaran.kegiatan.nama')->filter()->unique()->count() }}</div>
+                <div class="stat-value">{{ $statKegiatan }}</div>
                 <div class="stat-label">Kegiatan</div>
             </div>
         </div>
     </div>
 
-    <div class="table-toolbar">
-        <div class="search-box">
-            <i class="fas fa-search"></i>
-            <input type="text" id="searchInput" placeholder="Cari nama, NIM..." oninput="filterTable()">
+    <form method="GET" id="filterForm">
+        <div class="table-toolbar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" name="search" value="{{ request('search') }}"
+                       placeholder="Cari nama, NIM..." oninput="delayFilter()">
+            </div>
+            @if($isAllProdi)
+            <select name="prodi" class="filter-select" onchange="document.getElementById('filterForm').submit()">
+                <option value="">Semua Prodi</option>
+                @foreach($prodiList as $prodi)
+                    <option value="{{ $prodi->id }}" {{ request('prodi') == $prodi->id ? 'selected' : '' }}>
+                        {{ $prodi->nama }}
+                    </option>
+                @endforeach
+            </select>
+            @endif
+            <select name="kegiatan" class="filter-select" onchange="document.getElementById('filterForm').submit()">
+                <option value="">Semua Kegiatan</option>
+                @foreach($kegiatanList as $keg)
+                    <option value="{{ $keg->id }}" {{ request('kegiatan') == $keg->id ? 'selected' : '' }}>
+                        {{ $keg->nama }}
+                    </option>
+                @endforeach
+            </select>
+            <div class="toolbar-count">Total: <strong>{{ $mahasiswaList->total() }}</strong></div>
         </div>
-        @if($isAllProdi)
-        <select class="filter-select" id="filterProdi" onchange="filterTable()">
-            <option value="">Semua Prodi</option>
-            @foreach($mahasiswaList->pluck('programStudi')->filter()->unique('id')->sortBy('nama') as $prodi)
-                <option value="{{ $prodi->id }}">{{ $prodi->nama }}</option>
-            @endforeach
-        </select>
-        @endif
-        <select class="filter-select" id="filterKegiatan" onchange="filterTable()">
-            <option value="">Semua Kegiatan</option>
-            @foreach($mahasiswaList->pluck('pendaftaran.kegiatan')->filter()->unique('id')->sortBy('nama') as $keg)
-                <option value="{{ $keg->id }}">{{ $keg->nama }}</option>
-            @endforeach
-        </select>
-        <div class="toolbar-count">Total: <strong id="rowCount">{{ $mahasiswaList->count() }}</strong></div>
-    </div>
+    </form>
 
     <div class="table-container">
         @if($mahasiswaList->count() > 0)
@@ -213,7 +223,7 @@
                     @if($canEdit)<th style="width:100px;">Aksi</th>@endif
                 </tr>
             </thead>
-            <tbody id="tblBody">
+            <tbody>
                 @foreach($mahasiswaList as $i => $mhs)
                 @php
                     $prodi = $mhs->programStudi;
@@ -223,10 +233,8 @@
                                 ->map(fn($w) => strtoupper(substr($w,0,1)))
                                 ->take(2)->join('');
                 @endphp
-                <tr data-search="{{ strtolower($mhs->nama . ' ' . $mhs->nim) }}"
-                    data-prodi="{{ $prodi?->id }}"
-                    data-kegiatan="{{ $pend?->kegiatan_id }}">
-                    <td>{{ $i + 1 }}</td>
+                <tr>
+                    <td>{{ $mahasiswaList->firstItem() + $i }}</td>
                     <td>
                         <div class="mhs-info">
                             <div class="mhs-avatar">{{ $inits }}</div>
@@ -277,6 +285,44 @@
                 @endforeach
             </tbody>
         </table>
+
+        {{-- PAGINATION --}}
+        @if($mahasiswaList->hasPages())
+        <div class="pagination-wrap">
+            <div class="pagination-info">
+                Halaman {{ $mahasiswaList->currentPage() }} dari {{ $mahasiswaList->lastPage() }}
+                &mdash; {{ $mahasiswaList->firstItem() }}–{{ $mahasiswaList->lastItem() }} dari {{ $mahasiswaList->total() }} data
+            </div>
+            <div class="pagination-btns">
+                @if($mahasiswaList->onFirstPage())
+                    <span class="page-btn disabled"><i class="fas fa-chevron-left"></i></span>
+                @else
+                    <a href="{{ $mahasiswaList->previousPageUrl() }}" class="page-btn"><i class="fas fa-chevron-left"></i></a>
+                @endif
+                @php
+                    $start = max(1, $mahasiswaList->currentPage() - 2);
+                    $end   = min($mahasiswaList->lastPage(), $mahasiswaList->currentPage() + 2);
+                @endphp
+                @if($start > 1)
+                    <a href="{{ $mahasiswaList->url(1) }}" class="page-btn">1</a>
+                    @if($start > 2)<span class="page-btn disabled">…</span>@endif
+                @endif
+                @for($i = $start; $i <= $end; $i++)
+                    <a href="{{ $mahasiswaList->url($i) }}" class="page-btn {{ $i == $mahasiswaList->currentPage() ? 'active' : '' }}">{{ $i }}</a>
+                @endfor
+                @if($end < $mahasiswaList->lastPage())
+                    @if($end < $mahasiswaList->lastPage() - 1)<span class="page-btn disabled">…</span>@endif
+                    <a href="{{ $mahasiswaList->url($mahasiswaList->lastPage()) }}" class="page-btn">{{ $mahasiswaList->lastPage() }}</a>
+                @endif
+                @if($mahasiswaList->hasMorePages())
+                    <a href="{{ $mahasiswaList->nextPageUrl() }}" class="page-btn"><i class="fas fa-chevron-right"></i></a>
+                @else
+                    <span class="page-btn disabled"><i class="fas fa-chevron-right"></i></span>
+                @endif
+            </div>
+        </div>
+        @endif
+
         @else
         <div class="empty-state">
             <i class="fas fa-check-double"></i>
@@ -319,21 +365,10 @@
 
 @section('js')
 <script>
-    function filterTable() {
-        const q    = document.getElementById('searchInput').value.toLowerCase();
-        const prodiEl = document.getElementById('filterProdi');
-        const prodi   = prodiEl ? prodiEl.value : '';
-        const kegiatan = document.getElementById('filterKegiatan').value;
-        let visible = 0;
-
-        document.querySelectorAll('#tblBody tr[data-search]').forEach(row => {
-            const ok = (!q        || row.dataset.search.includes(q))
-                    && (!prodi    || row.dataset.prodi === prodi)
-                    && (!kegiatan || row.dataset.kegiatan === kegiatan);
-            row.style.display = ok ? '' : 'none';
-            if (ok) visible++;
-        });
-        document.getElementById('rowCount').textContent = visible;
+    let filterTimer;
+    function delayFilter() {
+        clearTimeout(filterTimer);
+        filterTimer = setTimeout(() => document.getElementById('filterForm').submit(), 600);
     }
 
     function openRevertModal(btn) {

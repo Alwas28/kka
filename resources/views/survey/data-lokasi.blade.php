@@ -55,22 +55,22 @@
     </div>
     @endif
 
-    {{-- Stat cards --}}
+    {{-- Stat cards (from full dataset, not current page) --}}
     <div class="stat-row">
         <div class="stat-card">
-            <div class="stat-num">{{ $surveys->count() }}</div>
+            <div class="stat-num">{{ $statTotal }}</div>
             <div class="stat-label">Total Lokasi</div>
         </div>
         <div class="stat-card">
-            <div class="stat-num">{{ $surveys->pluck('kelompok')->unique()->count() }}</div>
+            <div class="stat-num">{{ $statKelompok }}</div>
             <div class="stat-label">Jumlah Kelompok</div>
         </div>
         <div class="stat-card">
-            <div class="stat-num">{{ $surveys->pluck('kegiatan_id')->unique()->filter()->count() }}</div>
+            <div class="stat-num">{{ $statKegiatan }}</div>
             <div class="stat-label">Kegiatan Terkait</div>
         </div>
         <div class="stat-card">
-            <div class="stat-num">{{ $surveys->sum('peserta_count') }}</div>
+            <div class="stat-num">{{ $statPeserta }}</div>
             <div class="stat-label">Total Peserta</div>
         </div>
     </div>
@@ -95,7 +95,7 @@
     </div>
 
     <div class="table-toolbar">
-        <div class="table-info">Total: <strong>{{ $surveys->count() }}</strong> lokasi</div>
+        <div class="table-info">Total: <strong>{{ $surveys->total() }}</strong> lokasi</div>
     </div>
 
     <div class="table-container">
@@ -170,6 +170,44 @@
                 @endforeach
             </tbody>
         </table>
+
+        {{-- PAGINATION --}}
+        @if($surveys->hasPages())
+        <div class="pagination-wrap">
+            <div class="pagination-info">
+                Halaman {{ $surveys->currentPage() }} dari {{ $surveys->lastPage() }}
+                &mdash; {{ $surveys->firstItem() }}–{{ $surveys->lastItem() }} dari {{ $surveys->total() }} data
+            </div>
+            <div class="pagination-btns">
+                @if($surveys->onFirstPage())
+                    <span class="page-btn disabled"><i class="fas fa-chevron-left"></i></span>
+                @else
+                    <a href="{{ $surveys->previousPageUrl() }}" class="page-btn"><i class="fas fa-chevron-left"></i></a>
+                @endif
+                @php
+                    $start = max(1, $surveys->currentPage() - 2);
+                    $end   = min($surveys->lastPage(), $surveys->currentPage() + 2);
+                @endphp
+                @if($start > 1)
+                    <a href="{{ $surveys->url(1) }}" class="page-btn">1</a>
+                    @if($start > 2)<span class="page-btn disabled">…</span>@endif
+                @endif
+                @for($i = $start; $i <= $end; $i++)
+                    <a href="{{ $surveys->url($i) }}" class="page-btn {{ $i == $surveys->currentPage() ? 'active' : '' }}">{{ $i }}</a>
+                @endfor
+                @if($end < $surveys->lastPage())
+                    @if($end < $surveys->lastPage() - 1)<span class="page-btn disabled">…</span>@endif
+                    <a href="{{ $surveys->url($surveys->lastPage()) }}" class="page-btn">{{ $surveys->lastPage() }}</a>
+                @endif
+                @if($surveys->hasMorePages())
+                    <a href="{{ $surveys->nextPageUrl() }}" class="page-btn"><i class="fas fa-chevron-right"></i></a>
+                @else
+                    <span class="page-btn disabled"><i class="fas fa-chevron-right"></i></span>
+                @endif
+            </div>
+        </div>
+        @endif
+
         @else
         <div class="empty-state">
             <i class="fas fa-map-marked-alt"></i>

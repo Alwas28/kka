@@ -30,6 +30,7 @@ use App\Http\Controllers\UserRoleController;
 use App\Http\Controllers\BeritaController;
 use App\Http\Controllers\DosenPembimbingController;
 use App\Http\Controllers\HalamanController;
+use App\Http\Controllers\MahasiswaAdminController;
 use App\Http\Controllers\MahasiswaProfilController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\PengumumanController;
@@ -225,6 +226,10 @@ Route::middleware('auth')->group(function () {
     // Peserta & DPL
     Route::get('/peserta', [PesertaController::class, 'index'])->name('peserta.index');
     Route::get('/dpl', [PesertaController::class, 'dpl'])->name('dpl.index');
+
+    // Data Mahasiswa (Admin)
+    Route::get('/mahasiswa', [MahasiswaAdminController::class, 'index'])->name('mahasiswa.admin.index');
+    Route::put('/mahasiswa/{mahasiswa}/update-data', [MahasiswaAdminController::class, 'update'])->name('mahasiswa.admin.update');
 
     // Profil Mahasiswa (generik — dapat diakses dari menu manapun)
     Route::get('/mahasiswa/{mahasiswa}/profil', [MahasiswaProfilController::class, 'show'])->name('mahasiswa.profil');

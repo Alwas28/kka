@@ -211,27 +211,36 @@ class SurveyLokasiController extends Controller
     {
         abort_unless(auth()->user()->hasAccess('lihat.data-lokasi'), 403);
 
-        $query = SurveyLokasi::with(['desa.kecamatan.kabupaten.provinsi', 'surveyor', 'kegiatan'])
-            ->withCount(['peserta', 'dosenPembimbing'])
+        $baseQuery = SurveyLokasi::with(['desa.kecamatan.kabupaten.provinsi', 'surveyor', 'kegiatan'])
             ->whereNotNull('kelompok')
             ->orderBy('kelompok');
 
         if ($request->filled('q')) {
             $q = $request->q;
-            $query->where(function ($qb) use ($q) {
+            $baseQuery->where(function ($qb) use ($q) {
                 $qb->whereHas('desa', fn($d) => $d->where('nama', 'like', "%{$q}%"))
                    ->orWhere('kelompok', 'like', "%{$q}%");
             });
         }
 
         if ($request->filled('kegiatan_id')) {
-            $query->where('kegiatan_id', $request->kegiatan_id);
+            $baseQuery->where('kegiatan_id', $request->kegiatan_id);
         }
 
-        $surveys  = $query->get();
-        $kegiatan = \App\Models\Kegiatan::orderBy('nama')->get();
+        // Stats from full filtered dataset (separate lightweight query)
+        $statsItems   = (clone $baseQuery)->withCount('peserta')->get();
+        $statTotal    = $statsItems->count();
+        $statKelompok = $statsItems->pluck('kelompok')->unique()->count();
+        $statKegiatan = $statsItems->pluck('kegiatan_id')->filter()->unique()->count();
+        $statPeserta  = $statsItems->sum('peserta_count');
 
-        return view('survey.data-lokasi', compact('surveys', 'kegiatan'));
+        $surveys  = (clone $baseQuery)->withCount(['peserta', 'dosenPembimbing'])->paginate(15)->withQueryString();
+        $kegiatan = Kegiatan::orderBy('nama')->get();
+
+        return view('survey.data-lokasi', compact(
+            'surveys', 'kegiatan',
+            'statTotal', 'statKelompok', 'statKegiatan', 'statPeserta'
+        ));
     }
 
     public function setKelompok(Request $request, SurveyLokasi $survey)

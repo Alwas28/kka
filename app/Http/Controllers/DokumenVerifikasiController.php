@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Kegiatan;
+use App\Models\Mahasiswa;
 use App\Models\MahasiswaDokumen;
 use App\Models\MahasiswaNotifikasi;
+use App\Models\MahasiswaPendaftaran;
+use App\Models\ProgramStudi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -12,11 +16,14 @@ class DokumenVerifikasiController extends Controller
     /**
      * Tampilkan daftar Bukti Pembayaran untuk diverifikasi.
      */
-    public function pembayaran()
+    public function pembayaran(Request $request)
     {
         abort_unless(auth()->user()->hasAccess('lihat.dokumen-pembayaran'), 403);
 
-        $dokumenList = $this->getDokumenQuery('%pembayaran%')->get();
+        $query = $this->getDokumenQuery('%pembayaran%');
+        $this->applyDokumenFilters($query, $request);
+        $dokumenList = $query->paginate(15)->withQueryString();
+        $prodiList   = $this->isAllProdi() ? ProgramStudi::orderBy('nama')->get() : collect();
 
         return view('dokumen.verifikasi', [
             'dokumenList'    => $dokumenList,
@@ -26,17 +33,21 @@ class DokumenVerifikasiController extends Controller
             'routeTerima'    => 'dokumen.pembayaran.terima',
             'routeTolak'     => 'dokumen.pembayaran.tolak',
             'isAllProdi'     => $this->isAllProdi(),
+            'prodiList'      => $prodiList,
         ]);
     }
 
     /**
      * Tampilkan daftar Sertifikat Baca Quran untuk diverifikasi.
      */
-    public function sertifikat()
+    public function sertifikat(Request $request)
     {
         abort_unless(auth()->user()->hasAccess('lihat.sertifikat'), 403);
 
-        $dokumenList = $this->getDokumenQuery('%sertifikat%', '%quran%')->get();
+        $query = $this->getDokumenQuery('%sertifikat%', '%quran%');
+        $this->applyDokumenFilters($query, $request);
+        $dokumenList = $query->paginate(15)->withQueryString();
+        $prodiList   = $this->isAllProdi() ? ProgramStudi::orderBy('nama')->get() : collect();
 
         return view('dokumen.verifikasi', [
             'dokumenList'    => $dokumenList,
@@ -46,6 +57,7 @@ class DokumenVerifikasiController extends Controller
             'routeTerima'    => 'dokumen.sertifikat.terima',
             'routeTolak'     => 'dokumen.sertifikat.tolak',
             'isAllProdi'     => $this->isAllProdi(),
+            'prodiList'      => $prodiList,
         ]);
     }
 
@@ -53,11 +65,14 @@ class DokumenVerifikasiController extends Controller
      * Tampilkan daftar Dokumen Lainnya untuk diverifikasi.
      * (selain pembayaran dan sertifikat baca quran)
      */
-    public function dokumenLainnya()
+    public function dokumenLainnya(Request $request)
     {
         abort_unless(auth()->user()->hasAccess('lihat.dokumen-lainnya'), 403);
 
-        $dokumenList = $this->getDokumenQueryExclude('%pembayaran%', '%sertifikat%', '%quran%')->get();
+        $query = $this->getDokumenQueryExclude('%pembayaran%', '%sertifikat%', '%quran%');
+        $this->applyDokumenFilters($query, $request);
+        $dokumenList = $query->paginate(15)->withQueryString();
+        $prodiList   = $this->isAllProdi() ? ProgramStudi::orderBy('nama')->get() : collect();
 
         return view('dokumen.verifikasi', [
             'dokumenList'    => $dokumenList,
@@ -67,17 +82,18 @@ class DokumenVerifikasiController extends Controller
             'routeTerima'    => 'dokumen.lainnya.terima',
             'routeTolak'     => 'dokumen.lainnya.tolak',
             'isAllProdi'     => $this->isAllProdi(),
+            'prodiList'      => $prodiList,
         ]);
     }
 
     /**
      * Tampilkan daftar mahasiswa yang sudah terverifikasi (level >= 5).
      */
-    public function terverifikasi()
+    public function terverifikasi(Request $request)
     {
         abort_unless(auth()->user()->hasAccess('lihat.terverifikasi'), 403);
 
-        $query = \App\Models\Mahasiswa::with([
+        $baseQuery = Mahasiswa::with([
                 'programStudi.fakultas',
                 'level',
                 'pendaftaran.kegiatan',
@@ -86,15 +102,40 @@ class DokumenVerifikasiController extends Controller
             ->where('mahasiswa_level_id', '>=', 5);
 
         if (!$this->isAllProdi()) {
-            $query->whereIn('program_studi_id', $this->prodiIds());
+            $baseQuery->whereIn('program_studi_id', $this->prodiIds());
         }
 
-        $mahasiswaList = $query->latest()->get();
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $baseQuery->where(fn($q) => $q->where('nama', 'like', "%$s%")->orWhere('nim', 'like', "%$s%"));
+        }
+        if ($this->isAllProdi() && $request->filled('prodi')) {
+            $baseQuery->where('program_studi_id', $request->prodi);
+        }
+        if ($request->filled('kegiatan')) {
+            $baseQuery->whereHas('pendaftaran', fn($q) => $q->where('kegiatan_id', $request->kegiatan));
+        }
+
+        // Stats from full filtered dataset
+        $statTotal    = (clone $baseQuery)->count();
+        $statProdi    = (clone $baseQuery)->distinct()->count('program_studi_id');
+        $statKegiatan = MahasiswaPendaftaran::whereIn(
+            'mahasiswa_id', (clone $baseQuery)->pluck('id')
+        )->whereNotNull('kegiatan_id')->distinct()->count('kegiatan_id');
+
+        $mahasiswaList = (clone $baseQuery)->latest()->paginate(15)->withQueryString();
+        $prodiList     = $this->isAllProdi() ? ProgramStudi::orderBy('nama')->get() : collect();
+        $kegiatanList  = Kegiatan::orderBy('nama')->get();
 
         return view('dokumen.terverifikasi', [
             'mahasiswaList' => $mahasiswaList,
             'isAllProdi'    => $this->isAllProdi(),
             'canEdit'       => auth()->user()->hasAccess('edit.terverifikasi'),
+            'statTotal'     => $statTotal,
+            'statProdi'     => $statProdi,
+            'statKegiatan'  => $statKegiatan,
+            'prodiList'     => $prodiList,
+            'kegiatanList'  => $kegiatanList,
         ]);
     }
 
@@ -231,6 +272,25 @@ class DokumenVerifikasiController extends Controller
     }
 
     /* ─────────────────────────────────────────── helpers ──── */
+
+    /** Terapkan filter search, status, prodi dari request ke query dokumen */
+    private function applyDokumenFilters($query, Request $request): void
+    {
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->whereHas('pendaftaran.mahasiswa', fn($q) =>
+                $q->where('nama', 'like', "%$s%")->orWhere('nim', 'like', "%$s%")
+            );
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($this->isAllProdi() && $request->filled('prodi')) {
+            $query->whereHas('pendaftaran.mahasiswa',
+                fn($q) => $q->where('program_studi_id', $request->prodi)
+            );
+        }
+    }
 
     /** Apakah user bisa melihat semua prodi (tidak ada prodi terkait, atau punya role Administrator) */
     private function isAllProdi(): bool

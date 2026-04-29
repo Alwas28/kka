@@ -121,6 +121,13 @@
     .btn-modal-danger:hover { background: #dc2626; }
     .modal-dok-info { font-size: 13px; color: var(--text-secondary); margin-bottom: 14px; padding: 10px 14px; background: #f9fafb; border-radius: 8px; border: 1px solid var(--gray-border); }
     .modal-dok-info strong { color: var(--text-primary); }
+
+    @media (max-width: 640px) {
+        .table-toolbar { flex-direction: column; align-items: stretch; }
+        .search-box { max-width: 100%; }
+        .filter-select { width: 100%; }
+        .toolbar-count { margin-left: 0; }
+    }
 </style>
 @endsection
 
@@ -150,27 +157,32 @@
     </div>
     @endif
 
-    <div class="table-toolbar">
-        <div class="search-box">
-            <i class="fas fa-search"></i>
-            <input type="text" id="searchInput" placeholder="Cari nama, NIM..." oninput="filterTable()">
+    <form method="GET" id="filterForm">
+        <div class="table-toolbar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" name="search" value="{{ request('search') }}"
+                       placeholder="Cari nama, NIM..." oninput="delayFilter()">
+            </div>
+            <select name="status" class="filter-select" onchange="document.getElementById('filterForm').submit()">
+                <option value="">Semua Status</option>
+                <option value="pending"  {{ request('status') === 'pending'  ? 'selected' : '' }}>Menunggu Verifikasi</option>
+                <option value="diterima" {{ request('status') === 'diterima' ? 'selected' : '' }}>Diterima</option>
+                <option value="ditolak"  {{ request('status') === 'ditolak'  ? 'selected' : '' }}>Ditolak</option>
+            </select>
+            @if($isAllProdi)
+            <select name="prodi" class="filter-select" onchange="document.getElementById('filterForm').submit()">
+                <option value="">Semua Prodi</option>
+                @foreach($prodiList as $prodi)
+                    <option value="{{ $prodi->id }}" {{ request('prodi') == $prodi->id ? 'selected' : '' }}>
+                        {{ $prodi->nama }}
+                    </option>
+                @endforeach
+            </select>
+            @endif
+            <div class="toolbar-count">Total: <strong>{{ $dokumenList->total() }}</strong></div>
         </div>
-        <select class="filter-select" id="filterStatus" onchange="filterTable()">
-            <option value="">Semua Status</option>
-            <option value="pending">Menunggu Verifikasi</option>
-            <option value="diterima">Diterima</option>
-            <option value="ditolak">Ditolak</option>
-        </select>
-        @if($isAllProdi)
-        <select class="filter-select" id="filterProdi" onchange="filterTable()">
-            <option value="">Semua Prodi</option>
-            @foreach($dokumenList->pluck('pendaftaran.mahasiswa.programStudi')->filter()->unique('id')->sortBy('nama') as $prodi)
-                <option value="{{ $prodi->id }}">{{ $prodi->nama }}</option>
-            @endforeach
-        </select>
-        @endif
-        <div class="toolbar-count">Total: <strong id="rowCount">{{ $dokumenList->count() }}</strong></div>
-    </div>
+    </form>
 
     <div class="table-container">
         @if($dokumenList->count() > 0)
@@ -187,7 +199,7 @@
                     @if($canVerifikasi)<th style="width:160px;">Aksi</th>@endif
                 </tr>
             </thead>
-            <tbody id="verTableBody">
+            <tbody>
                 @foreach($dokumenList as $i => $dok)
                 @php
                     $mhs   = $dok->pendaftaran?->mahasiswa;
@@ -196,10 +208,8 @@
                                 ->map(fn($w) => strtoupper(substr($w,0,1)))
                                 ->take(2)->join('');
                 @endphp
-                <tr data-search="{{ strtolower(($mhs?->nama ?? '') . ' ' . ($mhs?->nim ?? '')) }}"
-                    data-status="{{ $dok->status }}"
-                    data-prodi="{{ $prodi?->id }}">
-                    <td>{{ $i + 1 }}</td>
+                <tr>
+                    <td>{{ $dokumenList->firstItem() + $i }}</td>
                     <td>
                         <div class="mhs-info">
                             <div class="mhs-avatar">{{ $inits }}</div>
@@ -269,6 +279,44 @@
                 @endforeach
             </tbody>
         </table>
+
+        {{-- PAGINATION --}}
+        @if($dokumenList->hasPages())
+        <div class="pagination-wrap">
+            <div class="pagination-info">
+                Halaman {{ $dokumenList->currentPage() }} dari {{ $dokumenList->lastPage() }}
+                &mdash; {{ $dokumenList->firstItem() }}–{{ $dokumenList->lastItem() }} dari {{ $dokumenList->total() }} data
+            </div>
+            <div class="pagination-btns">
+                @if($dokumenList->onFirstPage())
+                    <span class="page-btn disabled"><i class="fas fa-chevron-left"></i></span>
+                @else
+                    <a href="{{ $dokumenList->previousPageUrl() }}" class="page-btn"><i class="fas fa-chevron-left"></i></a>
+                @endif
+                @php
+                    $start = max(1, $dokumenList->currentPage() - 2);
+                    $end   = min($dokumenList->lastPage(), $dokumenList->currentPage() + 2);
+                @endphp
+                @if($start > 1)
+                    <a href="{{ $dokumenList->url(1) }}" class="page-btn">1</a>
+                    @if($start > 2)<span class="page-btn disabled">…</span>@endif
+                @endif
+                @for($i = $start; $i <= $end; $i++)
+                    <a href="{{ $dokumenList->url($i) }}" class="page-btn {{ $i == $dokumenList->currentPage() ? 'active' : '' }}">{{ $i }}</a>
+                @endfor
+                @if($end < $dokumenList->lastPage())
+                    @if($end < $dokumenList->lastPage() - 1)<span class="page-btn disabled">…</span>@endif
+                    <a href="{{ $dokumenList->url($dokumenList->lastPage()) }}" class="page-btn">{{ $dokumenList->lastPage() }}</a>
+                @endif
+                @if($dokumenList->hasMorePages())
+                    <a href="{{ $dokumenList->nextPageUrl() }}" class="page-btn"><i class="fas fa-chevron-right"></i></a>
+                @else
+                    <span class="page-btn disabled"><i class="fas fa-chevron-right"></i></span>
+                @endif
+            </div>
+        </div>
+        @endif
+
         @else
         <div class="empty-state">
             <i class="fas {{ $icon }}"></i>
@@ -314,21 +362,10 @@
 
 @section('js')
 <script>
-    function filterTable() {
-        const q      = document.getElementById('searchInput').value.toLowerCase();
-        const status = document.getElementById('filterStatus').value;
-        const prodiEl = document.getElementById('filterProdi');
-        const prodi  = prodiEl ? prodiEl.value : '';
-        let visible  = 0;
-
-        document.querySelectorAll('#verTableBody tr[data-search]').forEach(row => {
-            const ok = (!q      || row.dataset.search.includes(q))
-                    && (!status || row.dataset.status === status)
-                    && (!prodi  || row.dataset.prodi  === prodi);
-            row.style.display = ok ? '' : 'none';
-            if (ok) visible++;
-        });
-        document.getElementById('rowCount').textContent = visible;
+    let filterTimer;
+    function delayFilter() {
+        clearTimeout(filterTimer);
+        filterTimer = setTimeout(() => document.getElementById('filterForm').submit(), 600);
     }
 
     function openTolakModal(btn) {

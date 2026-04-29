@@ -19,6 +19,9 @@
 
             <div class="sidebar-header">
                 <img src="{{ asset('img/logo.png') }}" alt="UM Kendari Logo" class="sidebar-logo-img">
+                <button class="sidebar-close-btn" onclick="toggleSidebar()" title="Tutup menu">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
 
             <nav class="sidebar-nav">
@@ -208,6 +211,7 @@
                 {{-- ── AKADEMIK ─────────────────────────────────────────── --}}
                 @php
                     $hasPendaftaran = $u->hasAccess('lihat.registrasi')
+                        || $u->hasAccess('lihat.mahasiswa-admin')
                         || $u->hasAccess('lihat.dokumen-pembayaran')
                         || $u->hasAccess('lihat.sertifikat')
                         || $u->hasAccess('lihat.dokumen-lainnya')
@@ -232,6 +236,11 @@
                     <i class="fas fa-chevron-down toggle-arrow"></i>
                 </div>
                 <div class="submenu" id="submenu-nilai">
+                    @if($u->hasAccess('lihat.mahasiswa-admin'))
+                    <a href="{{ route('mahasiswa.admin.index') }}" class="submenu-item {{ request()->routeIs('mahasiswa.admin.index') ? 'active' : '' }}" onclick="closeSidebarMobile()">
+                        <i class="fas fa-users"></i><span>Data Mahasiswa</span>
+                    </a>
+                    @endif
                     @if($u->hasAccess('lihat.registrasi'))
                     <a href="{{ route('registrasi.index') }}" class="submenu-item {{ request()->routeIs('registrasi.index') ? 'active' : '' }}" onclick="closeSidebarMobile()">
                         <i class="fas fa-user-check"></i><span>Registrasi</span>

@@ -290,26 +290,30 @@
     @endif
 
     {{-- TOOLBAR --}}
-    <div class="table-toolbar">
-        <div class="search-box">
-            <i class="fas fa-search"></i>
-            <input type="text" id="searchInput" placeholder="Cari nama, NIM, atau email..." oninput="filterTable()">
-        </div>
+    <form method="GET" action="{{ route('registrasi.index') }}" id="filterForm">
+        <div class="table-toolbar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" name="search" value="{{ request('search') }}"
+                       placeholder="Cari nama, NIM, atau email..." oninput="delayFilter()">
+            </div>
 
-        <select class="filter-select" id="filterProdi" onchange="filterTable()">
-            <option value="">Semua Program Studi</option>
-            @php
-                $prodiList = $mahasiswaList->pluck('programStudi')->filter()->unique('id')->sortBy('nama');
-            @endphp
-            @foreach($prodiList as $prodi)
-                <option value="{{ $prodi->id }}">{{ $prodi->nama }}</option>
-            @endforeach
-        </select>
+            @if($isAllProdi)
+            <select name="prodi" class="filter-select" onchange="document.getElementById('filterForm').submit()">
+                <option value="">Semua Program Studi</option>
+                @foreach($prodiList as $prodi)
+                    <option value="{{ $prodi->id }}" {{ request('prodi') == $prodi->id ? 'selected' : '' }}>
+                        {{ $prodi->nama }}
+                    </option>
+                @endforeach
+            </select>
+            @endif
 
-        <div class="toolbar-count">
-            Menunggu persetujuan: <strong id="rowCount">{{ $mahasiswaList->count() }}</strong>
+            <div class="toolbar-count">
+                Menunggu persetujuan: <strong>{{ $mahasiswaList->total() }}</strong>
+            </div>
         </div>
-    </div>
+    </form>
 
     {{-- TABLE --}}
     <div class="table-container">
@@ -324,11 +328,11 @@
                     <th>Fakultas</th>
                     <th>Tgl. Daftar</th>
                     @if(auth()->user()->hasAccess('validasi.register'))
-                    <th style="width:120px">Aksi</th>
+                    <th style="width:160px">Aksi</th>
                     @endif
                 </tr>
             </thead>
-            <tbody id="regTableBody">
+            <tbody>
                 @foreach($mahasiswaList as $index => $mhs)
                 @php
                     $initials = collect(explode(' ', $mhs->nama))
@@ -336,9 +340,8 @@
                         ->take(2)
                         ->join('');
                 @endphp
-                <tr data-search="{{ strtolower($mhs->nama . ' ' . $mhs->nim . ' ' . $mhs->email) }}"
-                    data-prodi="{{ $mhs->program_studi_id }}">
-                    <td>{{ $index + 1 }}</td>
+                <tr>
+                    <td>{{ $mahasiswaList->firstItem() + $index }}</td>
                     <td>
                         <div class="mhs-info">
                             <div class="mhs-avatar">{{ $initials }}</div>
@@ -368,22 +371,22 @@
                     @if(auth()->user()->hasAccess('validasi.register'))
                     <td>
                         <div class="action-btns">
-                            <button class="btn btn-success btn-sm" title="Setujui"
+                            <button class="btn btn-success btn-sm"
                                 onclick="openSetujuiModal(
                                     {{ $mhs->id }},
                                     {{ json_encode($mhs->nama) }},
                                     {{ json_encode($mhs->nim) }},
                                     {{ json_encode($mhs->programStudi?->nama ?? '-') }}
                                 )">
-                                <i class="fas fa-check"></i>
+                                <i class="fas fa-check"></i> Terima
                             </button>
-                            <button class="btn btn-danger btn-sm" title="Tolak"
+                            <button class="btn btn-danger btn-sm"
                                 onclick="openTolakModal(
                                     {{ $mhs->id }},
                                     {{ json_encode($mhs->nama) }},
                                     {{ json_encode($mhs->nim) }}
                                 )">
-                                <i class="fas fa-times"></i>
+                                <i class="fas fa-times"></i> Tolak
                             </button>
                         </div>
                     </td>
@@ -392,6 +395,44 @@
                 @endforeach
             </tbody>
         </table>
+
+        {{-- PAGINATION --}}
+        @if($mahasiswaList->hasPages())
+        <div class="pagination-wrap">
+            <div class="pagination-info">
+                Halaman {{ $mahasiswaList->currentPage() }} dari {{ $mahasiswaList->lastPage() }}
+                &mdash; {{ $mahasiswaList->firstItem() }}–{{ $mahasiswaList->lastItem() }} dari {{ $mahasiswaList->total() }} data
+            </div>
+            <div class="pagination-btns">
+                @if($mahasiswaList->onFirstPage())
+                    <span class="page-btn disabled"><i class="fas fa-chevron-left"></i></span>
+                @else
+                    <a href="{{ $mahasiswaList->previousPageUrl() }}" class="page-btn"><i class="fas fa-chevron-left"></i></a>
+                @endif
+                @php
+                    $start = max(1, $mahasiswaList->currentPage() - 2);
+                    $end   = min($mahasiswaList->lastPage(), $mahasiswaList->currentPage() + 2);
+                @endphp
+                @if($start > 1)
+                    <a href="{{ $mahasiswaList->url(1) }}" class="page-btn">1</a>
+                    @if($start > 2)<span class="page-btn disabled">…</span>@endif
+                @endif
+                @for($i = $start; $i <= $end; $i++)
+                    <a href="{{ $mahasiswaList->url($i) }}" class="page-btn {{ $i == $mahasiswaList->currentPage() ? 'active' : '' }}">{{ $i }}</a>
+                @endfor
+                @if($end < $mahasiswaList->lastPage())
+                    @if($end < $mahasiswaList->lastPage() - 1)<span class="page-btn disabled">…</span>@endif
+                    <a href="{{ $mahasiswaList->url($mahasiswaList->lastPage()) }}" class="page-btn">{{ $mahasiswaList->lastPage() }}</a>
+                @endif
+                @if($mahasiswaList->hasMorePages())
+                    <a href="{{ $mahasiswaList->nextPageUrl() }}" class="page-btn"><i class="fas fa-chevron-right"></i></a>
+                @else
+                    <span class="page-btn disabled"><i class="fas fa-chevron-right"></i></span>
+                @endif
+            </div>
+        </div>
+        @endif
+
         @else
         <div class="empty-state">
             <i class="fas fa-user-check"></i>
@@ -470,6 +511,12 @@
 
 @section('js')
 <script>
+    let filterTimer;
+    function delayFilter() {
+        clearTimeout(filterTimer);
+        filterTimer = setTimeout(() => document.getElementById('filterForm').submit(), 600);
+    }
+
     // --- Modal helpers ---
     function openModal(id)  { document.getElementById(id)?.classList.add('active'); }
     function closeModal(id) { document.getElementById(id)?.classList.remove('active'); }
@@ -508,23 +555,6 @@
         document.getElementById('form-tolak').action = '/registrasi/' + id + '/tolak';
 
         openModal('modal-tolak');
-    }
-
-    // --- Filter ---
-    function filterTable() {
-        const q     = document.getElementById('searchInput').value.toLowerCase();
-        const prodi = document.getElementById('filterProdi').value;
-        let visible = 0;
-
-        document.querySelectorAll('#regTableBody tr[data-search]').forEach(row => {
-            const matchSearch = !q || row.dataset.search.includes(q);
-            const matchProdi  = !prodi || row.dataset.prodi === prodi;
-            const show = matchSearch && matchProdi;
-            row.style.display = show ? '' : 'none';
-            if (show) visible++;
-        });
-
-        document.getElementById('rowCount').textContent = visible;
     }
 </script>
 @endsection

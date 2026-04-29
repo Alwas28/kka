@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Kegiatan;
 use App\Models\Mahasiswa;
+use App\Models\ProgramStudi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -14,7 +16,7 @@ class RegistrasiMahasiswaController extends Controller
      * Difilter berdasarkan program studi yang ditangani user.
      * Jika user tidak memiliki prodi terkait → tampilkan semua.
      */
-    public function index()
+    public function index(Request $request)
     {
         abort_unless(auth()->user()->hasAccess('lihat.registrasi'), 403, 'Anda tidak memiliki akses untuk melihat halaman ini.');
 
@@ -29,15 +31,27 @@ class RegistrasiMahasiswaController extends Controller
             $query->whereIn('program_studi_id', $user->programStudi->pluck('id'));
         }
 
-        $mahasiswaList = $query->latest()->get();
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(fn($q) => $q->where('nama', 'like', "%$s%")
+                ->orWhere('nim', 'like', "%$s%")
+                ->orWhere('email', 'like', "%$s%"));
+        }
 
-        return view('registrasi.index', compact('mahasiswaList', 'isAllProdi'));
+        if ($isAllProdi && $request->filled('prodi')) {
+            $query->where('program_studi_id', $request->prodi);
+        }
+
+        $mahasiswaList = $query->latest()->paginate(15)->withQueryString();
+        $prodiList     = $isAllProdi ? ProgramStudi::orderBy('nama')->get() : collect();
+
+        return view('registrasi.index', compact('mahasiswaList', 'isAllProdi', 'prodiList'));
     }
 
     /**
      * Daftar mahasiswa yang sudah disetujui prodi (level 2) dan sedang mengisi form pendaftaran.
      */
-    public function disetujui()
+    public function disetujui(Request $request)
     {
         abort_unless(auth()->user()->hasAccess('lihat.registrasi'), 403, 'Anda tidak memiliki akses untuk melihat halaman ini.');
 
@@ -52,9 +66,33 @@ class RegistrasiMahasiswaController extends Controller
             $query->whereIn('program_studi_id', $user->programStudi->pluck('id'));
         }
 
-        $mahasiswaList = $query->latest()->get();
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(fn($q) => $q->where('nama', 'like', "%$s%")
+                ->orWhere('nim', 'like', "%$s%")
+                ->orWhere('email', 'like', "%$s%"));
+        }
 
-        return view('registrasi.disetujui', compact('mahasiswaList', 'isAllProdi'));
+        if ($isAllProdi && $request->filled('prodi')) {
+            $query->where('program_studi_id', $request->prodi);
+        }
+
+        if ($request->filled('status')) {
+            $status = $request->status;
+            if ($status === 'belum') {
+                $query->doesntHave('pendaftaran');
+            } elseif ($status === 'draft') {
+                $query->whereHas('pendaftaran', fn($q) => $q->where('status', 'draft'));
+            } elseif ($status === 'submitted') {
+                $query->whereHas('pendaftaran', fn($q) => $q->where('status', 'submitted'));
+            }
+        }
+
+        $mahasiswaList = $query->latest()->paginate(15)->withQueryString();
+        $prodiList     = ProgramStudi::with('fakultas')->orderBy('nama')->get();
+        $kegiatanList  = Kegiatan::orderByDesc('id')->get();
+
+        return view('registrasi.disetujui', compact('mahasiswaList', 'isAllProdi', 'prodiList', 'kegiatanList'));
     }
 
     /**
