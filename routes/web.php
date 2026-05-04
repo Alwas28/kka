@@ -33,6 +33,7 @@ use App\Http\Controllers\HalamanController;
 use App\Http\Controllers\MahasiswaAdminController;
 use App\Http\Controllers\MahasiswaProfilController;
 use App\Http\Controllers\MenuController;
+use App\Http\Controllers\RekapController;
 use App\Http\Controllers\PengumumanController;
 use Illuminate\Support\Facades\Route;
 
@@ -227,9 +228,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/peserta', [PesertaController::class, 'index'])->name('peserta.index');
     Route::get('/dpl', [PesertaController::class, 'dpl'])->name('dpl.index');
 
+    // Rekap
+    Route::get('/rekap/pendaftaran', [RekapController::class, 'pendaftaran'])->name('rekap.pendaftaran');
+
     // Data Mahasiswa (Admin)
     Route::get('/mahasiswa', [MahasiswaAdminController::class, 'index'])->name('mahasiswa.admin.index');
     Route::put('/mahasiswa/{mahasiswa}/update-data', [MahasiswaAdminController::class, 'update'])->name('mahasiswa.admin.update');
+    Route::delete('/mahasiswa/{mahasiswa}/hapus', [MahasiswaAdminController::class, 'destroy'])->name('mahasiswa.admin.destroy');
 
     // Profil Mahasiswa (generik — dapat diakses dari menu manapun)
     Route::get('/mahasiswa/{mahasiswa}/profil', [MahasiswaProfilController::class, 'show'])->name('mahasiswa.profil');

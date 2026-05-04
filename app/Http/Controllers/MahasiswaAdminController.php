@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Kegiatan;
 use App\Models\Mahasiswa;
+use App\Models\MahasiswaDokumen;
 use App\Models\MahasiswaLevel;
+use App\Models\MahasiswaNotifikasi;
 use App\Models\ProgramStudi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -75,5 +77,25 @@ class MahasiswaAdminController extends Controller
         }
 
         return back()->with('success', "Data <strong>{$mahasiswa->nama}</strong> berhasil diperbarui.");
+    }
+
+    public function destroy(Mahasiswa $mahasiswa)
+    {
+        abort_unless(auth()->user()->hasAccess('edit.mahasiswa-admin'), 403);
+
+        $nama = $mahasiswa->nama;
+        $nim  = $mahasiswa->nim;
+
+        // Hapus data terkait sebelum menghapus mahasiswa
+        $mahasiswa->load('pendaftaran');
+        if ($mahasiswa->pendaftaran) {
+            MahasiswaDokumen::where('mahasiswa_pendaftaran_id', $mahasiswa->pendaftaran->id)->delete();
+            $mahasiswa->pendaftaran->delete();
+        }
+        MahasiswaNotifikasi::where('mahasiswa_id', $mahasiswa->id)->delete();
+        $mahasiswa->delete();
+
+        return redirect()->route('mahasiswa.admin.index')
+            ->with('success', "Data mahasiswa <strong>{$nama}</strong> (NIM: {$nim}) telah dihapus secara permanen.");
     }
 }

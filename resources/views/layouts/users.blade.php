@@ -269,6 +269,11 @@
                         <i class="fas fa-check-double"></i><span>Terverifikasi</span>
                     </a>
                     @endif
+                    @if($u->hasAccess('lihat.mahasiswa-admin'))
+                    <a href="{{ route('rekap.pendaftaran') }}" class="submenu-item {{ request()->routeIs('rekap.pendaftaran') ? 'active' : '' }}" onclick="closeSidebarMobile()">
+                        <i class="fas fa-chart-bar"></i><span>Rekap Pendaftaran</span>
+                    </a>
+                    @endif
                 </div>
                 @endif
 
