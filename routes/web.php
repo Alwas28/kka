@@ -230,6 +230,7 @@ Route::middleware('auth')->group(function () {
 
     // Rekap
     Route::get('/rekap/pendaftaran', [RekapController::class, 'pendaftaran'])->name('rekap.pendaftaran');
+    Route::get('/rekap/pendaftaran/{kegiatanId}', [RekapController::class, 'detail'])->name('rekap.pendaftaran.detail');
 
     // Data Mahasiswa (Admin)
     Route::get('/mahasiswa', [MahasiswaAdminController::class, 'index'])->name('mahasiswa.admin.index');
