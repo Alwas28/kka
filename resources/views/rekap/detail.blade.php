@@ -56,6 +56,8 @@
     .btn-profil:hover { box-shadow:0 3px 10px rgba(165,42,42,.35); transform:translateY(-1px); color:#fff; }
     .btn-secondary { background:var(--gray-border); color:var(--text-primary); }
     .btn-secondary:hover { background:#d1d5db; }
+    .btn-grafik { background:linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; }
+    .btn-grafik:hover { box-shadow:0 3px 10px rgba(37,99,235,.35); transform:translateY(-1px); color:#fff; }
     .btn-export { background:linear-gradient(135deg,#16a34a,#15803d); color:#fff; }
     .btn-export:hover { box-shadow:0 3px 10px rgba(22,163,74,.35); transform:translateY(-1px); color:#fff; }
     .no-kelompok { font-size:11px; color:#9ca3af; white-space:nowrap; }
@@ -112,6 +114,9 @@
             <p>Daftar mahasiswa beserta seluruh data identitas</p>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <a href="{{ route('rekap.pendaftaran.grafik', $kegiatan->id) }}" class="btn btn-grafik">
+                <i class="fas fa-chart-pie"></i> Lihat Grafik
+            </a>
             <button type="button" onclick="openExportModal()" class="btn btn-export">
                 <i class="fas fa-file-excel"></i> Export Excel
             </button>

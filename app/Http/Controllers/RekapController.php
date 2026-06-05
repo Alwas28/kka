@@ -184,6 +184,101 @@ class RekapController extends Controller
         ]);
     }
 
+    public function grafik(Request $request, $kegiatanId)
+    {
+        abort_unless(auth()->user()->hasAccess('lihat.mahasiswa-admin'), 403);
+
+        $kegiatan = $this->getKegiatan($kegiatanId);
+        abort_if(!$kegiatan, 404);
+
+        $rows = DB::table('mahasiswa_pendaftaran as mp')
+            ->join('mahasiswa as m', 'm.id', '=', 'mp.mahasiswa_id')
+            ->leftJoin('program_studi as ps', 'ps.id', '=', 'm.program_studi_id')
+            ->where('mp.kegiatan_id', $kegiatanId)
+            ->select([
+                'mp.jenis_kelamin',
+                'mp.ukuran_baju',
+                'mp.semester',
+                'mp.sks_ditempuh',
+                'mp.ipk',
+                'mp.penyakit_diderita',
+                'mp.sedang_hamil',
+                'mp.catatan_kesehatan',
+                'ps.nama as prodi_nama',
+            ])
+            ->get();
+
+        $total = $rows->count();
+
+        // Jenis Kelamin
+        $jkCounts     = $rows->groupBy('jenis_kelamin')->map->count();
+        $jenisKelamin = [
+            'labels' => ['Laki-laki', 'Perempuan'],
+            'data'   => [$jkCounts->get('L', 0), $jkCounts->get('P', 0)],
+        ];
+
+        // Ukuran Baju (urutan standar)
+        $bajuCounts = $rows->groupBy('ukuran_baju')->map->count();
+        $sizeOrder  = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+        $ukuranBaju = [
+            'labels' => $sizeOrder,
+            'data'   => array_map(fn($s) => $bajuCounts->get($s, 0), $sizeOrder),
+        ];
+
+        // Program Studi (diurutkan terbanyak)
+        $prodiCounts = $rows->groupBy('prodi_nama')->map->count()->sortByDesc(fn($v) => $v);
+        $prodiData   = [
+            'labels' => $prodiCounts->keys()->map(fn($k) => $k ?? 'Tidak Diketahui')->values()->toArray(),
+            'data'   => $prodiCounts->values()->toArray(),
+        ];
+
+        // Semester
+        $smtCounts    = $rows->groupBy('semester')->map->count()->sortKeys();
+        $semesterData = [
+            'labels' => $smtCounts->keys()->map(fn($k) => "Smt {$k}")->values()->toArray(),
+            'data'   => $smtCounts->values()->toArray(),
+        ];
+
+        // SKS — 5 rentang
+        $sksGroups = ['< 100' => 0, '100–120' => 0, '121–140' => 0, '141–160' => 0, '> 160' => 0];
+        foreach ($rows as $r) {
+            $v = (int) $r->sks_ditempuh;
+            if      ($v < 100) $sksGroups['< 100']++;
+            elseif  ($v <= 120) $sksGroups['100–120']++;
+            elseif  ($v <= 140) $sksGroups['121–140']++;
+            elseif  ($v <= 160) $sksGroups['141–160']++;
+            else                $sksGroups['> 160']++;
+        }
+        $sksData = ['labels' => array_keys($sksGroups), 'data' => array_values($sksGroups)];
+
+        // IPK — 5 rentang
+        $ipkGroups = ['< 2.50' => 0, '2.50–2.99' => 0, '3.00–3.49' => 0, '3.50–3.75' => 0, '3.76–4.00' => 0];
+        foreach ($rows as $r) {
+            $v = (float) $r->ipk;
+            if      ($v < 2.50) $ipkGroups['< 2.50']++;
+            elseif  ($v < 3.00) $ipkGroups['2.50–2.99']++;
+            elseif  ($v < 3.50) $ipkGroups['3.00–3.49']++;
+            elseif  ($v <= 3.75) $ipkGroups['3.50–3.75']++;
+            else                 $ipkGroups['3.76–4.00']++;
+        }
+        $ipkData = ['labels' => array_keys($ipkGroups), 'data' => array_values($ipkGroups)];
+
+        // Kesehatan — 2 kelas
+        $sehat   = $rows->filter(fn($r) =>
+            empty($r->penyakit_diderita) && !$r->sedang_hamil && empty($r->catatan_kesehatan)
+        )->count();
+        $kesehatanData = [
+            'labels' => ['Sehat', 'Sehat dengan Catatan'],
+            'data'   => [$sehat, $total - $sehat],
+        ];
+
+        return view('rekap.grafik', compact(
+            'kegiatan', 'total',
+            'jenisKelamin', 'ukuranBaju', 'prodiData',
+            'semesterData', 'sksData', 'ipkData', 'kesehatanData'
+        ));
+    }
+
     // ── Private helpers ────────────────────────────────────────────────────────
 
     private function getKegiatan($kegiatanId)
