@@ -10,6 +10,31 @@ use Illuminate\Support\Str;
 
 class RekapController extends Controller
 {
+    // Semua kolom yang tersedia untuk tabel & export
+    private const ALL_COLUMNS = [
+        'no'                 => 'No',
+        'nim'                => 'NIM',
+        'nama'               => 'Nama Mahasiswa',
+        'email'              => 'Email',
+        'prodi'              => 'Program Studi',
+        'level'              => 'Level',
+        'jenis_kelamin'      => 'Jenis Kelamin',
+        'tempat_lahir'       => 'Tempat Lahir',
+        'tanggal_lahir'      => 'Tanggal Lahir',
+        'no_hp'              => 'No. HP',
+        'golongan_darah'     => 'Gol. Darah',
+        'alamat'             => 'Alamat',
+        'semester'           => 'Semester',
+        'sks_ditempuh'       => 'SKS Ditempuh',
+        'ipk'                => 'IPK',
+        'ukuran_baju'        => 'Ukuran Baju',
+        'penyakit_diderita'  => 'Penyakit Diderita',
+        'sedang_hamil'       => 'Sedang Hamil',
+        'catatan_kesehatan'  => 'Catatan Kesehatan',
+        'status_pendaftaran' => 'Status Pendaftaran',
+        'kelompok'           => 'No. Kelompok',
+    ];
+
     public function pendaftaran(Request $request)
     {
         abort_unless(auth()->user()->hasAccess('lihat.mahasiswa-admin'), 403);
@@ -61,31 +86,16 @@ class RekapController extends Controller
     {
         abort_unless(auth()->user()->hasAccess('lihat.mahasiswa-admin'), 403);
 
-        $kegiatan = DB::table('kegiatan as k')
-            ->leftJoin('jenis_kka as jk', 'jk.id', '=', 'k.jenis_kka_id')
-            ->leftJoin('periode as per', 'per.id', '=', 'k.periode_id')
-            ->where('k.id', $kegiatanId)
-            ->select(['k.id', 'k.nama', 'jk.nama as jenis_nama', 'per.nama as periode_nama'])
-            ->first();
-
+        $kegiatan = $this->getKegiatan($kegiatanId);
         abort_if(!$kegiatan, 404);
 
-        $query = $this->buildMahasiswaQuery($kegiatanId, $request);
+        $mahasiswaList = $this->buildMahasiswaQuery($kegiatanId, $request)
+            ->select($this->identitasSelect())
+            ->orderBy('m.nama')
+            ->paginate(25)
+            ->withQueryString();
 
-        $mahasiswaList = $query->select([
-            'm.id as mahasiswa_id',
-            'm.nim',
-            'm.nama',
-            'm.email',
-            'ps.nama as prodi_nama',
-            'ml.nama as level_nama',
-            'mp.status as pendaftaran_status',
-        ])->orderBy('m.nama')->paginate(25)->withQueryString();
-
-        $kelompokMap = DB::table('kelompok_mahasiswa as km')
-            ->join('survey_lokasi as sl', 'sl.id', '=', 'km.survey_lokasi_id')
-            ->where('sl.kegiatan_id', $kegiatanId)
-            ->pluck('km.survey_lokasi_id', 'km.mahasiswa_id');
+        $kelompokMap = $this->getKelompokMap($kegiatanId);
 
         $statTotal  = DB::table('mahasiswa_pendaftaran')->where('kegiatan_id', $kegiatanId)->count();
         $statSubmit = DB::table('mahasiswa_pendaftaran')->where('kegiatan_id', $kegiatanId)->where('status', 'submitted')->count();
@@ -102,25 +112,10 @@ class RekapController extends Controller
     {
         abort_unless(auth()->user()->hasAccess('lihat.mahasiswa-admin'), 403);
 
-        $kegiatan = DB::table('kegiatan as k')
-            ->leftJoin('jenis_kka as jk', 'jk.id', '=', 'k.jenis_kka_id')
-            ->leftJoin('periode as per', 'per.id', '=', 'k.periode_id')
-            ->where('k.id', $kegiatanId)
-            ->select(['k.id', 'k.nama', 'jk.nama as jenis_nama', 'per.nama as periode_nama'])
-            ->first();
-
+        $kegiatan = $this->getKegiatan($kegiatanId);
         abort_if(!$kegiatan, 404);
 
-        $allColumns = [
-            'no'                 => 'No',
-            'nim'                => 'NIM',
-            'nama'               => 'Nama Mahasiswa',
-            'email'              => 'Email',
-            'prodi'              => 'Program Studi',
-            'level'              => 'Level',
-            'status_pendaftaran' => 'Status Pendaftaran',
-            'kelompok'           => 'No. Kelompok',
-        ];
+        $allColumns = self::ALL_COLUMNS;
 
         $selectedColumns = collect($request->input('kolom', array_keys($allColumns)))
             ->filter(fn($c) => isset($allColumns[$c]))
@@ -132,15 +127,9 @@ class RekapController extends Controller
         }
 
         $rows = $this->buildMahasiswaQuery($kegiatanId, $request)
-            ->select([
-                'm.id as mahasiswa_id',
-                'm.nim',
-                'm.nama',
-                'm.email',
-                'ps.nama as prodi_nama',
-                'ml.nama as level_nama',
-                'mp.status as pendaftaran_status',
-            ])->orderBy('m.nama')->get();
+            ->select($this->identitasSelect())
+            ->orderBy('m.nama')
+            ->get();
 
         $kelompokMap = collect();
         if (in_array('kelompok', $selectedColumns)) {
@@ -156,61 +145,37 @@ class RekapController extends Controller
         $colspan    = count($selectedColumns);
         $exportedAt = now()->format('d/m/Y H:i');
 
-        $lines   = [];
-        $lines[] = '<!DOCTYPE html>';
-        $lines[] = '<html><head><meta charset="UTF-8"></head><body>';
-        $lines[] = '<table border="1" cellspacing="0" cellpadding="0" style="font-family:Arial,sans-serif;font-size:11px;border-collapse:collapse;">';
-
-        $lines[] = '<tr>'
-            . '<td colspan="' . $colspan . '" style="font-weight:bold;font-size:13px;background:#8B0000;color:#fff;padding:10px 14px;">'
-            . htmlspecialchars("Rekap Pendaftaran KKA \u{2014} {$kegiatan->nama}")
-            . '</td></tr>';
-
-        $lines[] = '<tr>'
-            . '<td colspan="' . $colspan . '" style="font-size:10px;color:#555;padding:5px 14px;background:#fef2f2;">'
-            . htmlspecialchars("Jenis KKA: {$kegiatan->jenis_nama}  |  Periode: {$kegiatan->periode_nama}  |  Diekspor: {$exportedAt}  |  Total: {$rows->count()} mahasiswa")
-            . '</td></tr>';
-
-        $lines[] = '<tr><td colspan="' . $colspan . '" style="padding:4px;"></td></tr>';
+        $html  = '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>';
+        $html .= '<table border="1" cellspacing="0" cellpadding="0" style="font-family:Arial,sans-serif;font-size:11px;border-collapse:collapse;">';
+        $html .= '<tr><td colspan="' . $colspan . '" style="font-weight:bold;font-size:13px;background:#8B0000;color:#fff;padding:10px 14px;">'
+               . htmlspecialchars("Rekap Pendaftaran KKA \u{2014} {$kegiatan->nama}") . '</td></tr>';
+        $html .= '<tr><td colspan="' . $colspan . '" style="font-size:10px;color:#555;padding:5px 14px;background:#fef2f2;">'
+               . htmlspecialchars("Jenis KKA: {$kegiatan->jenis_nama}  |  Periode: {$kegiatan->periode_nama}  |  Diekspor: {$exportedAt}  |  Total: {$rows->count()} mahasiswa")
+               . '</td></tr>';
+        $html .= '<tr><td colspan="' . $colspan . '" style="padding:3px;"></td></tr>';
 
         // Header
-        $headerCells = array_map(
-            fn($col) => '<th style="background:#8B0000;color:#fff;font-weight:bold;padding:7px 10px;text-align:left;border:1px solid #a00;">'
-                . htmlspecialchars($allColumns[$col]) . '</th>',
-            $selectedColumns
-        );
-        $lines[] = '<tr>' . implode('', $headerCells) . '</tr>';
+        $html .= '<tr>';
+        foreach ($selectedColumns as $col) {
+            $html .= '<th style="background:#8B0000;color:#fff;font-weight:bold;padding:7px 10px;text-align:left;border:1px solid #a00;">'
+                   . htmlspecialchars($allColumns[$col]) . '</th>';
+        }
+        $html .= '</tr>';
 
-        // Data rows
+        // Data
         foreach ($rows as $i => $mhs) {
             $bg    = $i % 2 === 0 ? '#ffffff' : '#fafafa';
-            $cells = array_map(function ($col) use ($mhs, $kelompokMap, $i) {
-                $val = match ($col) {
-                    'no'                 => $i + 1,
-                    'nim'                => $mhs->nim,
-                    'nama'               => $mhs->nama,
-                    'email'              => $mhs->email,
-                    'prodi'              => $mhs->prodi_nama ?? '-',
-                    'level'              => $mhs->level_nama ?? '-',
-                    'status_pendaftaran' => match ($mhs->pendaftaran_status) {
-                        'submitted' => 'Sudah Submit',
-                        'draft'     => 'Draft',
-                        default     => 'Belum Mengisi',
-                    },
-                    'kelompok' => $kelompokMap->has($mhs->mahasiswa_id)
-                        ? 'Kelompok ' . ($kelompokMap->get($mhs->mahasiswa_id)->kelompok ?? '-')
-                        : 'Belum Ada Kelompok',
-                    default => '-',
-                };
-                return '<td style="padding:5px 8px;border:1px solid #ddd;">' . htmlspecialchars((string) $val) . '</td>';
-            }, $selectedColumns);
-
-            $lines[] = '<tr style="background:' . $bg . ';">' . implode('', $cells) . '</tr>';
+            $html .= '<tr style="background:' . $bg . ';">';
+            foreach ($selectedColumns as $col) {
+                $val = $this->resolveColumnValue($col, $mhs, $kelompokMap, $i);
+                $html .= '<td style="padding:5px 8px;border:1px solid #ddd;">' . htmlspecialchars((string) $val) . '</td>';
+            }
+            $html .= '</tr>';
         }
 
-        $lines[] = '</table></body></html>';
+        $html .= '</table></body></html>';
 
-        return response(implode("\n", $lines), 200, [
+        return response($html, 200, [
             'Content-Type'        => 'application/vnd.ms-excel; charset=UTF-8',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
             'Pragma'              => 'no-cache',
@@ -219,7 +184,18 @@ class RekapController extends Controller
         ]);
     }
 
-    // Query builder bersama untuk detail & export
+    // ── Private helpers ────────────────────────────────────────────────────────
+
+    private function getKegiatan($kegiatanId)
+    {
+        return DB::table('kegiatan as k')
+            ->leftJoin('jenis_kka as jk', 'jk.id', '=', 'k.jenis_kka_id')
+            ->leftJoin('periode as per', 'per.id', '=', 'k.periode_id')
+            ->where('k.id', $kegiatanId)
+            ->select(['k.id', 'k.nama', 'jk.nama as jenis_nama', 'per.nama as periode_nama'])
+            ->first();
+    }
+
     private function buildMahasiswaQuery($kegiatanId, Request $request)
     {
         $query = DB::table('mahasiswa_pendaftaran as mp')
@@ -249,5 +225,81 @@ class RekapController extends Controller
         }
 
         return $query;
+    }
+
+    private function identitasSelect(): array
+    {
+        return [
+            'm.id as mahasiswa_id',
+            'm.nim',
+            'm.nama',
+            'm.email',
+            'ps.nama as prodi_nama',
+            'ml.nama as level_nama',
+            'mp.jenis_kelamin',
+            'mp.tempat_lahir',
+            'mp.tanggal_lahir',
+            'mp.no_hp',
+            'mp.golongan_darah',
+            'mp.alamat',
+            'mp.semester',
+            'mp.sks_ditempuh',
+            'mp.ipk',
+            'mp.ukuran_baju',
+            'mp.penyakit_diderita',
+            'mp.sedang_hamil',
+            'mp.catatan_kesehatan',
+            'mp.status as pendaftaran_status',
+        ];
+    }
+
+    private function getKelompokMap($kegiatanId)
+    {
+        return DB::table('kelompok_mahasiswa as km')
+            ->join('survey_lokasi as sl', 'sl.id', '=', 'km.survey_lokasi_id')
+            ->where('sl.kegiatan_id', $kegiatanId)
+            ->select(['km.mahasiswa_id', 'sl.kelompok', 'sl.id as survey_lokasi_id'])
+            ->get()
+            ->keyBy('mahasiswa_id');
+    }
+
+    private function resolveColumnValue(string $col, object $mhs, $kelompokMap, int $i): string
+    {
+        return match ($col) {
+            'no'                 => (string) ($i + 1),
+            'nim'                => $mhs->nim ?? '-',
+            'nama'               => $mhs->nama ?? '-',
+            'email'              => $mhs->email ?? '-',
+            'prodi'              => $mhs->prodi_nama ?? '-',
+            'level'              => $mhs->level_nama ?? '-',
+            'jenis_kelamin'      => match ($mhs->jenis_kelamin ?? '') {
+                'L' => 'Laki-laki', 'P' => 'Perempuan', default => '-',
+            },
+            'tempat_lahir'       => $mhs->tempat_lahir ?? '-',
+            'tanggal_lahir'      => $mhs->tanggal_lahir
+                ? \Carbon\Carbon::parse($mhs->tanggal_lahir)->format('d/m/Y')
+                : '-',
+            'no_hp'              => $mhs->no_hp ?? '-',
+            'golongan_darah'     => $mhs->golongan_darah ?? '-',
+            'alamat'             => $mhs->alamat ?? '-',
+            'semester'           => $mhs->semester !== null ? (string) $mhs->semester : '-',
+            'sks_ditempuh'       => $mhs->sks_ditempuh !== null ? (string) $mhs->sks_ditempuh : '-',
+            'ipk'                => $mhs->ipk !== null ? number_format((float) $mhs->ipk, 2) : '-',
+            'ukuran_baju'        => $mhs->ukuran_baju ?? '-',
+            'penyakit_diderita'  => $mhs->penyakit_diderita ?? '-',
+            'sedang_hamil'       => match ($mhs->sedang_hamil ?? null) {
+                1, true  => 'Ya',
+                0, false => 'Tidak',
+                default  => '-',
+            },
+            'catatan_kesehatan'  => $mhs->catatan_kesehatan ?? '-',
+            'status_pendaftaran' => match ($mhs->pendaftaran_status ?? '') {
+                'submitted' => 'Sudah Submit', 'draft' => 'Draft', default => 'Belum Mengisi',
+            },
+            'kelompok'           => $kelompokMap->has($mhs->mahasiswa_id)
+                ? 'Kelompok ' . ($kelompokMap->get($mhs->mahasiswa_id)->kelompok ?? '-')
+                : 'Belum Ada Kelompok',
+            default              => '-',
+        };
     }
 }

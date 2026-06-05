@@ -35,13 +35,20 @@
     .table-toolbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:10px; flex-wrap:wrap; }
     .table-info { font-size:13px; color:var(--text-secondary); }
 
-    .badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+    /* Tabel identitas — compact, banyak kolom */
+    .table-container table th { font-size:11px; white-space:nowrap; padding:8px 10px; }
+    .table-container table td { font-size:12px; padding:7px 10px; vertical-align:top; }
+    .cell-2line strong { display:block; font-size:12px; font-weight:700; color:var(--text-primary); }
+    .cell-2line span   { font-size:11px; color:var(--text-secondary); }
+    .cell-wrap { max-width:200px; white-space:normal; word-break:break-word; font-size:12px; color:var(--text-secondary); }
+    .cell-mono { font-family:monospace; font-size:12px; }
+
+    .badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; white-space:nowrap; }
     .badge-submit { background:rgba(16,185,129,.12); color:#059669; }
     .badge-draft  { background:rgba(245,158,11,.12); color:#d97706; }
     .badge-belum  { background:#f3f4f6; color:#9ca3af; }
-
-    .mahasiswa-block strong { font-size:13px; font-weight:700; color:var(--text-primary); display:block; }
-    .mahasiswa-block span   { font-size:12px; color:var(--text-secondary); }
+    .badge-l  { background:#dbeafe; color:#1d4ed8; }
+    .badge-p  { background:#fce7f3; color:#be185d; }
 
     .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; text-decoration:none; transition:all .2s; font-family:inherit; }
     .btn-sm { padding:5px 10px; font-size:11px; }
@@ -51,8 +58,7 @@
     .btn-secondary:hover { background:#d1d5db; }
     .btn-export { background:linear-gradient(135deg,#16a34a,#15803d); color:#fff; }
     .btn-export:hover { box-shadow:0 3px 10px rgba(22,163,74,.35); transform:translateY(-1px); color:#fff; }
-
-    .no-kelompok { font-size:11px; color:#9ca3af; }
+    .no-kelompok { font-size:11px; color:#9ca3af; white-space:nowrap; }
 
     .empty-state { text-align:center; padding:50px 20px; color:var(--text-secondary); }
     .empty-state i { font-size:40px; color:var(--gray-border); margin-bottom:12px; display:block; }
@@ -61,30 +67,31 @@
     /* ── Modal Export ── */
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1000; align-items:center; justify-content:center; padding:16px; }
     .modal-overlay.active { display:flex; }
-    .modal-box { background:#fff; border-radius:14px; width:100%; max-width:520px; box-shadow:0 20px 60px rgba(0,0,0,.25); overflow:hidden; }
-    .modal-header { background:linear-gradient(135deg,#16a34a,#15803d); color:#fff; padding:18px 22px; display:flex; align-items:center; justify-content:space-between; }
-    .modal-header h3 { font-size:16px; font-weight:700; margin:0; }
+    .modal-box { background:#fff; border-radius:14px; width:100%; max-width:600px; max-height:90vh; box-shadow:0 20px 60px rgba(0,0,0,.25); overflow:hidden; display:flex; flex-direction:column; }
+    .modal-header { background:linear-gradient(135deg,#16a34a,#15803d); color:#fff; padding:16px 20px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+    .modal-header h3 { font-size:15px; font-weight:700; margin:0; }
     .modal-close { background:none; border:none; color:rgba(255,255,255,.8); font-size:20px; cursor:pointer; line-height:1; padding:0 4px; }
     .modal-close:hover { color:#fff; }
-    .modal-body { padding:20px 22px; }
-    .modal-body p { font-size:13px; color:var(--text-secondary); margin:0 0 16px; }
+    .modal-body { padding:18px 20px; overflow-y:auto; flex:1; }
+    .modal-body > p { font-size:13px; color:var(--text-secondary); margin:0 0 14px; }
 
-    .col-list { display:grid; grid-template-columns:1fr 1fr; gap:8px 20px; margin-bottom:16px; }
-    .col-item { display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; color:var(--text-primary); user-select:none; }
-    .col-item input[type=checkbox] { width:16px; height:16px; accent-color:var(--maroon-main); cursor:pointer; flex-shrink:0; }
-    .col-item:hover { color:var(--maroon-main); }
+    .col-group { margin-bottom:14px; }
+    .col-group-title { font-size:11px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px; padding-bottom:4px; border-bottom:1px solid var(--gray-border); }
+    .col-list { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px 14px; }
+    .col-item { display:flex; align-items:center; gap:7px; cursor:pointer; font-size:12px; color:var(--text-primary); user-select:none; padding:3px 0; }
+    .col-item input[type=checkbox] { width:15px; height:15px; accent-color:#16a34a; cursor:pointer; flex-shrink:0; }
+    .col-item:hover { color:#16a34a; }
 
-    .col-actions { display:flex; gap:8px; margin-bottom:16px; }
+    .col-actions { display:flex; gap:8px; margin-bottom:14px; }
     .col-actions button { background:none; border:1px solid var(--gray-border); border-radius:6px; padding:4px 10px; font-size:12px; font-weight:600; cursor:pointer; color:var(--text-secondary); transition:all .2s; font-family:inherit; }
-    .col-actions button:hover { border-color:var(--maroon-main); color:var(--maroon-main); }
+    .col-actions button:hover { border-color:#16a34a; color:#16a34a; }
 
-    .filter-notice { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px 14px; font-size:12px; color:#166534; display:flex; align-items:center; gap:8px; }
-    .filter-notice i { flex-shrink:0; }
+    .filter-notice { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:9px 13px; font-size:12px; color:#166534; display:flex; align-items:flex-start; gap:8px; margin-top:12px; }
 
-    .modal-footer { padding:14px 22px; border-top:1px solid var(--gray-border); display:flex; justify-content:flex-end; gap:10px; background:#fafafa; }
-
+    .modal-footer { padding:12px 20px; border-top:1px solid var(--gray-border); display:flex; justify-content:flex-end; gap:10px; background:#fafafa; flex-shrink:0; }
     .btn-export-submit { background:linear-gradient(135deg,#16a34a,#15803d); color:#fff; border:none; border-radius:8px; padding:9px 18px; font-size:13px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:7px; font-family:inherit; transition:all .2s; }
-    .btn-export-submit:hover { box-shadow:0 4px 14px rgba(22,163,74,.4); transform:translateY(-1px); }
+    .btn-export-submit:hover:not(:disabled) { box-shadow:0 4px 14px rgba(22,163,74,.4); transform:translateY(-1px); }
+    .btn-export-submit:disabled { opacity:.5; cursor:default; transform:none; }
     .btn-cancel-modal { background:var(--gray-border); color:var(--text-primary); border:none; border-radius:8px; padding:9px 16px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; }
     .btn-cancel-modal:hover { background:#d1d5db; }
 </style>
@@ -93,7 +100,6 @@
 @section('konten')
 <div class="dashboard-content">
 
-    {{-- Breadcrumb --}}
     <div class="breadcrumb">
         <a href="{{ route('rekap.pendaftaran') }}"><i class="fas fa-chart-bar"></i> Rekap Pendaftaran</a>
         <i class="fas fa-chevron-right" style="font-size:10px;"></i>
@@ -103,7 +109,7 @@
     <div class="page-header">
         <div class="page-header-left">
             <h2><i class="fas fa-users" style="color:var(--maroon-main);margin-right:8px;"></i>{{ $kegiatan->nama }}</h2>
-            <p>Daftar mahasiswa yang mendaftar pada kegiatan ini</p>
+            <p>Daftar mahasiswa beserta seluruh data identitas</p>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
             <button type="button" onclick="openExportModal()" class="btn btn-export">
@@ -115,7 +121,6 @@
         </div>
     </div>
 
-    {{-- Info kegiatan --}}
     <div class="kegiatan-info">
         <div class="ki-item">
             <div class="ki-label">Jenis KKA</div>
@@ -131,7 +136,6 @@
         </div>
     </div>
 
-    {{-- Stat cards --}}
     <div class="stat-row">
         <div class="stat-card c-total">
             <div class="stat-num">{{ $statTotal }}</div>
@@ -151,7 +155,6 @@
         </div>
     </div>
 
-    {{-- Filter --}}
     <div class="filter-bar">
         <form method="GET" action="{{ route('rekap.pendaftaran.detail', $kegiatan->id) }}" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
             <div class="search-box">
@@ -185,42 +188,102 @@
         <table>
             <thead>
                 <tr>
-                    <th style="width:40px;">No</th>
-                    <th style="width:120px;">NIM</th>
-                    <th>Nama Mahasiswa</th>
-                    <th>Program Studi</th>
-                    <th style="width:100px;">Level</th>
-                    <th style="width:120px;">Status</th>
-                    <th style="width:110px;text-align:center;">Profil</th>
+                    {{-- Identitas Dasar --}}
+                    <th style="width:36px;">No</th>
+                    <th style="width:110px;">NIM</th>
+                    <th style="min-width:160px;">Nama</th>
+                    <th style="min-width:130px;">Email</th>
+                    <th style="min-width:140px;">Program Studi</th>
+                    <th style="width:80px;">Level</th>
+                    {{-- Identitas Diri --}}
+                    <th style="width:65px;">JK</th>
+                    <th style="min-width:140px;">Tempat / Tgl Lahir</th>
+                    <th style="width:110px;">No. HP</th>
+                    <th style="width:70px;">Gol. Darah</th>
+                    <th style="min-width:180px;">Alamat</th>
+                    {{-- Akademik --}}
+                    <th style="width:60px;">Smt</th>
+                    <th style="width:60px;">SKS</th>
+                    <th style="width:55px;">IPK</th>
+                    {{-- Lainnya --}}
+                    <th style="width:80px;">Baju</th>
+                    <th style="min-width:150px;">Kesehatan</th>
+                    {{-- Status & Aksi --}}
+                    <th style="width:105px;">Status</th>
+                    <th style="width:100px;text-align:center;">Profil</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($mahasiswaList as $i => $mhs)
-                @php $surveyLokasiId = $kelompokMap->get($mhs->mahasiswa_id); @endphp
+                @php $km = $kelompokMap->get($mhs->mahasiswa_id); @endphp
                 <tr>
-                    <td style="color:var(--text-secondary);font-size:13px;">{{ $mahasiswaList->firstItem() + $i }}</td>
-                    <td style="font-size:13px;font-weight:600;color:var(--text-secondary);">{{ $mhs->nim }}</td>
+                    <td style="color:var(--text-secondary);">{{ $mahasiswaList->firstItem() + $i }}</td>
+                    <td class="cell-mono">{{ $mhs->nim }}</td>
                     <td>
-                        <div class="mahasiswa-block">
+                        <div class="cell-2line">
                             <strong>{{ $mhs->nama }}</strong>
-                            <span>{{ $mhs->email }}</span>
                         </div>
                     </td>
+                    <td style="font-size:11px;color:var(--text-secondary);">{{ $mhs->email }}</td>
                     <td style="font-size:12px;color:var(--text-secondary);">{{ $mhs->prodi_nama ?? '—' }}</td>
                     <td style="font-size:12px;color:var(--text-secondary);">{{ $mhs->level_nama ?? '—' }}</td>
+                    {{-- JK --}}
+                    <td>
+                        @if($mhs->jenis_kelamin === 'L')
+                            <span class="badge badge-l"><i class="fas fa-mars"></i> L</span>
+                        @elseif($mhs->jenis_kelamin === 'P')
+                            <span class="badge badge-p"><i class="fas fa-venus"></i> P</span>
+                        @else
+                            <span style="color:var(--text-secondary);font-size:12px;">—</span>
+                        @endif
+                    </td>
+                    {{-- Tempat/Tgl Lahir --}}
+                    <td>
+                        <div class="cell-2line">
+                            <strong>{{ $mhs->tempat_lahir ?? '—' }}</strong>
+                            <span>{{ $mhs->tanggal_lahir ? \Carbon\Carbon::parse($mhs->tanggal_lahir)->format('d/m/Y') : '—' }}</span>
+                        </div>
+                    </td>
+                    <td style="font-size:12px;">{{ $mhs->no_hp ?? '—' }}</td>
+                    <td style="font-size:12px;text-align:center;">{{ $mhs->golongan_darah ?? '—' }}</td>
+                    <td><div class="cell-wrap">{{ $mhs->alamat ?? '—' }}</div></td>
+                    {{-- Akademik --}}
+                    <td style="text-align:center;font-weight:600;">{{ $mhs->semester ?? '—' }}</td>
+                    <td style="text-align:center;font-weight:600;">{{ $mhs->sks_ditempuh ?? '—' }}</td>
+                    <td style="text-align:center;font-weight:600;">{{ $mhs->ipk !== null ? number_format((float)$mhs->ipk, 2) : '—' }}</td>
+                    {{-- Baju --}}
+                    <td style="text-align:center;font-size:12px;font-weight:600;">{{ $mhs->ukuran_baju ?? '—' }}</td>
+                    {{-- Kesehatan --}}
+                    <td>
+                        <div style="font-size:11px;color:var(--text-secondary);line-height:1.6;">
+                            @if($mhs->penyakit_diderita)
+                                <div><i class="fas fa-notes-medical" style="color:#ef4444;margin-right:3px;"></i>{{ $mhs->penyakit_diderita }}</div>
+                            @endif
+                            @if($mhs->sedang_hamil)
+                                <div><i class="fas fa-baby" style="color:#ec4899;margin-right:3px;"></i>Sedang hamil</div>
+                            @endif
+                            @if($mhs->catatan_kesehatan)
+                                <div><i class="fas fa-comment-medical" style="color:#6b7280;margin-right:3px;"></i>{{ $mhs->catatan_kesehatan }}</div>
+                            @endif
+                            @if(!$mhs->penyakit_diderita && !$mhs->sedang_hamil && !$mhs->catatan_kesehatan)
+                                <span style="color:#d1d5db;">—</span>
+                            @endif
+                        </div>
+                    </td>
+                    {{-- Status --}}
                     <td>
                         @if($mhs->pendaftaran_status === 'submitted')
                             <span class="badge badge-submit"><i class="fas fa-check-circle"></i> Submit</span>
                         @elseif($mhs->pendaftaran_status === 'draft')
                             <span class="badge badge-draft"><i class="fas fa-pencil-alt"></i> Draft</span>
                         @else
-                            <span class="badge badge-belum"><i class="fas fa-minus-circle"></i> Belum Isi</span>
+                            <span class="badge badge-belum"><i class="fas fa-minus-circle"></i> Belum</span>
                         @endif
                     </td>
+                    {{-- Profil --}}
                     <td style="text-align:center;">
-                        @if($surveyLokasiId)
-                            <a href="{{ route('mahasiswa.profil', $mhs->mahasiswa_id) }}"
-                               class="btn btn-profil btn-sm">
+                        @if($km)
+                            <a href="{{ route('mahasiswa.profil', $mhs->mahasiswa_id) }}" class="btn btn-profil btn-sm">
                                 <i class="fas fa-id-card"></i> Profil
                             </a>
                         @else
@@ -293,13 +356,8 @@
         </div>
 
         <form id="form-export" method="GET" action="{{ route('rekap.pendaftaran.export', $kegiatan->id) }}">
-            {{-- Preserve active filters --}}
-            @if(request('q'))
-                <input type="hidden" name="q" value="{{ request('q') }}">
-            @endif
-            @if(request('status'))
-                <input type="hidden" name="status" value="{{ request('status') }}">
-            @endif
+            @if(request('q'))    <input type="hidden" name="q"      value="{{ request('q') }}"> @endif
+            @if(request('status')) <input type="hidden" name="status" value="{{ request('status') }}"> @endif
 
             <div class="modal-body">
                 <p>Centang kolom yang ingin disertakan dalam file Excel:</p>
@@ -313,48 +371,62 @@
                     </button>
                 </div>
 
-                <div class="col-list" id="col-list">
-                    <label class="col-item">
-                        <input type="checkbox" name="kolom[]" value="no" checked>
-                        <span><i class="fas fa-hashtag" style="width:14px;color:var(--text-secondary);"></i> No</span>
-                    </label>
-                    <label class="col-item">
-                        <input type="checkbox" name="kolom[]" value="nim" checked>
-                        <span><i class="fas fa-id-badge" style="width:14px;color:var(--text-secondary);"></i> NIM</span>
-                    </label>
-                    <label class="col-item">
-                        <input type="checkbox" name="kolom[]" value="nama" checked>
-                        <span><i class="fas fa-user" style="width:14px;color:var(--text-secondary);"></i> Nama Mahasiswa</span>
-                    </label>
-                    <label class="col-item">
-                        <input type="checkbox" name="kolom[]" value="email" checked>
-                        <span><i class="fas fa-envelope" style="width:14px;color:var(--text-secondary);"></i> Email</span>
-                    </label>
-                    <label class="col-item">
-                        <input type="checkbox" name="kolom[]" value="prodi" checked>
-                        <span><i class="fas fa-graduation-cap" style="width:14px;color:var(--text-secondary);"></i> Program Studi</span>
-                    </label>
-                    <label class="col-item">
-                        <input type="checkbox" name="kolom[]" value="level" checked>
-                        <span><i class="fas fa-layer-group" style="width:14px;color:var(--text-secondary);"></i> Level</span>
-                    </label>
-                    <label class="col-item">
-                        <input type="checkbox" name="kolom[]" value="status_pendaftaran" checked>
-                        <span><i class="fas fa-tasks" style="width:14px;color:var(--text-secondary);"></i> Status Pendaftaran</span>
-                    </label>
-                    <label class="col-item">
-                        <input type="checkbox" name="kolom[]" value="kelompok" checked>
-                        <span><i class="fas fa-users" style="width:14px;color:var(--text-secondary);"></i> No. Kelompok</span>
-                    </label>
+                {{-- Grup: Identitas Dasar --}}
+                <div class="col-group">
+                    <div class="col-group-title"><i class="fas fa-id-card"></i> Identitas Dasar</div>
+                    <div class="col-list">
+                        <label class="col-item"><input type="checkbox" name="kolom[]" value="no"    checked> No</label>
+                        <label class="col-item"><input type="checkbox" name="kolom[]" value="nim"   checked> NIM</label>
+                        <label class="col-item"><input type="checkbox" name="kolom[]" value="nama"  checked> Nama Mahasiswa</label>
+                        <label class="col-item"><input type="checkbox" name="kolom[]" value="email" checked> Email</label>
+                        <label class="col-item"><input type="checkbox" name="kolom[]" value="prodi" checked> Program Studi</label>
+                        <label class="col-item"><input type="checkbox" name="kolom[]" value="level" checked> Level</label>
+                    </div>
+                </div>
+
+                {{-- Grup: Identitas Diri --}}
+                <div class="col-group">
+                    <div class="col-group-title"><i class="fas fa-user"></i> Identitas Diri</div>
+                    <div class="col-list">
+                        <label class="col-item"><input type="checkbox" name="kolom[]" value="jenis_kelamin"  checked> Jenis Kelamin</label>
+                        <label class="col-item"><input type="checkbox" name="kolom[]" value="tempat_lahir"   checked> Tempat Lahir</label>
+                        <label class="col-item"><input type="checkbox" name="kolom[]" value="tanggal_lahir"  checked> Tanggal Lahir</label>
+                        <label class="col-item"><input type="checkbox" name="kolom[]" value="no_hp"          checked> No. HP</label>
+                        <label class="col-item"><input type="checkbox" name="kolom[]" value="golongan_darah" checked> Gol. Darah</label>
+                        <label class="col-item"><input type="checkbox" name="kolom[]" value="alamat"         checked> Alamat</label>
+                    </div>
+                </div>
+
+                {{-- Grup: Akademik --}}
+                <div class="col-group">
+                    <div class="col-group-title"><i class="fas fa-graduation-cap"></i> Akademik</div>
+                    <div class="col-list">
+                        <label class="col-item"><input type="checkbox" name="kolom[]" value="semester"     checked> Semester</label>
+                        <label class="col-item"><input type="checkbox" name="kolom[]" value="sks_ditempuh" checked> SKS Ditempuh</label>
+                        <label class="col-item"><input type="checkbox" name="kolom[]" value="ipk"          checked> IPK</label>
+                    </div>
+                </div>
+
+                {{-- Grup: Lainnya --}}
+                <div class="col-group">
+                    <div class="col-group-title"><i class="fas fa-clipboard-list"></i> Lainnya</div>
+                    <div class="col-list">
+                        <label class="col-item"><input type="checkbox" name="kolom[]" value="ukuran_baju"       checked> Ukuran Baju</label>
+                        <label class="col-item"><input type="checkbox" name="kolom[]" value="penyakit_diderita"  checked> Penyakit Diderita</label>
+                        <label class="col-item"><input type="checkbox" name="kolom[]" value="sedang_hamil"       checked> Sedang Hamil</label>
+                        <label class="col-item"><input type="checkbox" name="kolom[]" value="catatan_kesehatan"  checked> Catatan Kesehatan</label>
+                        <label class="col-item"><input type="checkbox" name="kolom[]" value="status_pendaftaran" checked> Status Pendaftaran</label>
+                        <label class="col-item"><input type="checkbox" name="kolom[]" value="kelompok"           checked> No. Kelompok</label>
+                    </div>
                 </div>
 
                 @if(request()->hasAny(['q','status']))
                 <div class="filter-notice">
-                    <i class="fas fa-filter"></i>
+                    <i class="fas fa-filter" style="flex-shrink:0;margin-top:1px;"></i>
                     <span>
                         Filter aktif akan ikut diterapkan pada data yang diekspor
-                        @if(request('q'))<strong>(kata kunci: "{{ request('q') }}")</strong>@endif
-                        @if(request('status'))<strong>(status: {{ request('status') }})</strong>@endif
+                        @if(request('q'))(kata kunci: <strong>"{{ request('q') }}"</strong>)@endif
+                        @if(request('status'))(status: <strong>{{ request('status') }}</strong>)@endif
                     </span>
                 </div>
                 @endif
@@ -371,23 +443,20 @@
 </div>
 
 <script>
-function openExportModal() {
-    document.getElementById('modal-export').classList.add('active');
-}
-function closeExportModal() {
-    document.getElementById('modal-export').classList.remove('active');
-}
+function openExportModal()  { document.getElementById('modal-export').classList.add('active'); }
+function closeExportModal() { document.getElementById('modal-export').classList.remove('active'); }
+
 function toggleAllColumns(checked) {
-    document.querySelectorAll('#col-list input[type=checkbox]').forEach(cb => cb.checked = checked);
-    validateExportBtn();
+    document.querySelectorAll('#form-export input[type=checkbox]').forEach(cb => cb.checked = checked);
+    syncExportBtn();
 }
-function validateExportBtn() {
-    const anyChecked = [...document.querySelectorAll('#col-list input[type=checkbox]')].some(cb => cb.checked);
-    document.getElementById('btn-do-export').disabled = !anyChecked;
-    document.getElementById('btn-do-export').style.opacity = anyChecked ? '1' : '0.5';
+function syncExportBtn() {
+    const any = [...document.querySelectorAll('#form-export input[type=checkbox]')].some(cb => cb.checked);
+    const btn = document.getElementById('btn-do-export');
+    btn.disabled      = !any;
 }
-document.querySelectorAll('#col-list input[type=checkbox]').forEach(cb => {
-    cb.addEventListener('change', validateExportBtn);
+document.querySelectorAll('#form-export input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', syncExportBtn);
 });
 </script>
 @endsection
