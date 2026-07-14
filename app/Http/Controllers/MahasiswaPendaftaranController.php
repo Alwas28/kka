@@ -256,9 +256,12 @@ class MahasiswaPendaftaranController extends Controller
         }
 
         if ($level == 2) {
-            // Kirim pertama kali
-            if ($pendaftaran->status !== 'draft') {
-                return back()->with('error', 'Pendaftaran Anda sudah pernah dikirim sebelumnya.');
+            // Kirim pertama kali.
+            // Jika status sudah submitted tapi level kembali ke 2 (reset manual), cukup naikkan level saja.
+            if ($pendaftaran->status === 'submitted') {
+                $mahasiswa->update(['mahasiswa_level_id' => 3]);
+                return redirect()->route('mahasiswa.dashboard')
+                    ->with('success', 'Status pendaftaran dipulihkan. Silakan menunggu verifikasi dokumen.');
             }
 
             $dokumenWajibIds = KegiatanDokumen::where('kegiatan_id', $pendaftaran->kegiatan_id)

@@ -101,7 +101,6 @@ class KegiatanController extends Controller
         $kegiatan->update($data);
         $kegiatan->tahapan()->delete();
         $this->saveTahapan($kegiatan, $request);
-        $kegiatan->dokumen()->delete();
         $this->saveDokumen($kegiatan, $request);
         $kegiatan->komponen()->delete();
         $this->saveKomponen($kegiatan, $request);
@@ -193,67 +192,83 @@ class KegiatanController extends Controller
         }
     }
 
+    /**
+     * Simpan syarat dokumen kegiatan dengan cara upsert (bukan hapus-lalu-buat-ulang).
+     * kegiatan_dokumen.id dipakai oleh mahasiswa_dokumen (cascadeOnDelete) — jika baris
+     * fixed/custom yang masih dipakai ikut dihapus & dibuat ulang, semua dokumen yang
+     * sudah diupload mahasiswa untuk kegiatan ini ikut terhapus otomatis oleh DB.
+     */
     private function saveDokumen(Kegiatan $kegiatan, Request $request): void
     {
         $dokDaftar   = $request->input('dok_daftar', []);
         $lapIndividu = $request->input('lap_individu', []);
         $lapKelompok = $request->input('lap_kelompok', []);
 
+        $keptIds = [];
+
         // — Fixed: Dokumen Pendaftaran —
         foreach (self::FIXED_PENDAFTARAN as $idx => $nama) {
-            $kegiatan->dokumen()->create([
-                'kategori' => 'pendaftaran',
-                'nama'     => $nama,
-                'is_wajib' => isset($dokDaftar[$idx]['wajib']),
-                'is_fixed' => true,
-                'urutan'   => $idx,
-            ]);
+            $dok = $kegiatan->dokumen()->updateOrCreate(
+                ['kategori' => 'pendaftaran', 'nama' => $nama, 'is_fixed' => true],
+                ['is_wajib' => isset($dokDaftar[$idx]['wajib']), 'urutan' => $idx]
+            );
+            $keptIds[] = $dok->id;
         }
         // Custom: Dokumen Pendaftaran
         foreach ($dokDaftar as $idx => $dok) {
             if ($idx < count(self::FIXED_PENDAFTARAN) || empty($dok['nama'])) continue;
-            $kegiatan->dokumen()->create([
-                'kategori' => 'pendaftaran',
-                'nama'     => $dok['nama'],
-                'is_wajib' => isset($dok['wajib']),
-                'is_fixed' => false,
-                'urutan'   => $idx,
-            ]);
+            $keptIds[] = $this->upsertCustomDokumen($kegiatan, $dok, 'pendaftaran', $idx);
         }
 
         // — Fixed: Laporan Individu —
         foreach (self::FIXED_INDIVIDU as $idx => $nama) {
-            $kegiatan->dokumen()->create([
-                'kategori' => 'laporan_individu',
-                'nama'     => $nama,
-                'is_wajib' => isset($lapIndividu[$idx]['wajib']),
-                'is_fixed' => true,
-                'urutan'   => $idx,
-            ]);
+            $dok = $kegiatan->dokumen()->updateOrCreate(
+                ['kategori' => 'laporan_individu', 'nama' => $nama, 'is_fixed' => true],
+                ['is_wajib' => isset($lapIndividu[$idx]['wajib']), 'urutan' => $idx]
+            );
+            $keptIds[] = $dok->id;
         }
         // Custom: Laporan Individu
         foreach ($lapIndividu as $idx => $dok) {
             if ($idx < count(self::FIXED_INDIVIDU) || empty($dok['nama'])) continue;
-            $kegiatan->dokumen()->create([
-                'kategori' => 'laporan_individu',
-                'nama'     => $dok['nama'],
-                'is_wajib' => isset($dok['wajib']),
-                'is_fixed' => false,
-                'urutan'   => $idx,
-            ]);
+            $keptIds[] = $this->upsertCustomDokumen($kegiatan, $dok, 'laporan_individu', $idx);
         }
 
         // — Custom: Laporan Kelompok —
         foreach ($lapKelompok as $idx => $dok) {
             if (empty($dok['nama'])) continue;
-            $kegiatan->dokumen()->create([
-                'kategori' => 'laporan_kelompok',
+            $keptIds[] = $this->upsertCustomDokumen($kegiatan, $dok, 'laporan_kelompok', $idx);
+        }
+
+        // Hapus hanya syarat dokumen yang benar-benar dihilangkan dari form
+        // (mis. admin klik "Hapus" pada dokumen custom), bukan seluruhnya.
+        $kegiatan->dokumen()->whereNotIn('id', $keptIds)->delete();
+    }
+
+    /** Update dokumen custom by id jika ada & masih milik kegiatan ini, atau buat baru. */
+    private function upsertCustomDokumen(Kegiatan $kegiatan, array $dok, string $kategori, int $urutan): int
+    {
+        $existing = !empty($dok['id'])
+            ? $kegiatan->dokumen()->where('is_fixed', false)->find($dok['id'])
+            : null;
+
+        if ($existing) {
+            $existing->update([
+                'kategori' => $kategori,
                 'nama'     => $dok['nama'],
                 'is_wajib' => isset($dok['wajib']),
-                'is_fixed' => false,
-                'urutan'   => $idx,
+                'urutan'   => $urutan,
             ]);
+            return $existing->id;
         }
+
+        return $kegiatan->dokumen()->create([
+            'kategori' => $kategori,
+            'nama'     => $dok['nama'],
+            'is_wajib' => isset($dok['wajib']),
+            'is_fixed' => false,
+            'urutan'   => $urutan,
+        ])->id;
     }
 
     private function saveKomponen(Kegiatan $kegiatan, Request $request): void

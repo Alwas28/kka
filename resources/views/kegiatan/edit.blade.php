@@ -329,6 +329,7 @@
                         $lblId = 'lbl-daftar-' . $cidx;
                     @endphp
                     <div class="doc-item" data-custom="1">
+                        <input type="hidden" name="dok_daftar[{{ $cidx }}][id]" value="{{ $dok->id }}">
                         <div class="doc-icon custom"><i class="fas fa-file"></i></div>
                         <input type="text" name="dok_daftar[{{ $cidx }}][nama]"
                             class="doc-name-input" value="{{ $dok->nama }}" required placeholder="Nama dokumen...">
@@ -405,6 +406,7 @@
                             @foreach($customInd as $ci => $dok)
                             @php $cidx = 1 + $ci; $lblId = 'lbl-individu-' . $cidx; @endphp
                             <div class="doc-item" data-custom="1">
+                                <input type="hidden" name="lap_individu[{{ $cidx }}][id]" value="{{ $dok->id }}">
                                 <div class="doc-icon custom"><i class="fas fa-file"></i></div>
                                 <input type="text" name="lap_individu[{{ $cidx }}][nama]"
                                     class="doc-name-input" value="{{ $dok->nama }}" required placeholder="Nama dokumen...">
@@ -454,6 +456,7 @@
                             @foreach($lapKelompok as $ki => $dok)
                             @php $lblId = 'lbl-kelompok-' . $ki; @endphp
                             <div class="doc-item" data-custom="1">
+                                <input type="hidden" name="lap_kelompok[{{ $ki }}][id]" value="{{ $dok->id }}">
                                 <div class="doc-icon custom"><i class="fas fa-file"></i></div>
                                 <input type="text" name="lap_kelompok[{{ $ki }}][nama]"
                                     class="doc-name-input" value="{{ $dok->nama }}" required placeholder="Nama dokumen...">

@@ -376,7 +376,11 @@ class DokumenVerifikasiController extends Controller
         if (!$pendaftaran) return;
 
         $mahasiswa = $pendaftaran->mahasiswa;
-        if (!$mahasiswa || $mahasiswa->mahasiswa_level_id != 3) return;
+        // Proses jika level 3 (normal), atau level 2 tapi pendaftaran sudah submitted
+        // (edge case: level di-reset manual oleh admin tapi form sudah pernah dikirim)
+        $levelOk = $mahasiswa->mahasiswa_level_id == 3
+            || ($mahasiswa->mahasiswa_level_id == 2 && $pendaftaran->status === 'submitted');
+        if (!$mahasiswa || !$levelOk) return;
 
         // Masih ada dokumen pending? Belum selesai verifikasi.
         $hasPending = MahasiswaDokumen::where('mahasiswa_pendaftaran_id', $pendaftaran->id)
