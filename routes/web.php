@@ -249,6 +249,7 @@ Route::middleware('auth')->group(function () {
 
     // Setup Kelompok
     Route::get('/kelompok/{survey}/setup', [KelompokController::class, 'setup'])->name('kelompok.setup');
+    Route::get('/kelompok/{survey}/export-peserta', [KelompokController::class, 'exportPeserta'])->name('kelompok.export-peserta');
     Route::post('/kelompok/{survey}/mahasiswa', [KelompokController::class, 'tambahMahasiswa'])->name('kelompok.tambah-mahasiswa');
     Route::delete('/kelompok/{survey}/mahasiswa/{mahasiswa}', [KelompokController::class, 'hapusMahasiswa'])->name('kelompok.hapus-mahasiswa');
     Route::post('/kelompok/{survey}/mahasiswa/{mahasiswa}/koordinator', [KelompokController::class, 'setKoordinator'])->name('kelompok.koordinator');

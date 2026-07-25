@@ -192,9 +192,16 @@
                 Peserta Mahasiswa
                 <span class="section-count">{{ $survey->peserta->count() }}</span>
             </div>
-            <button class="btn btn-primary btn-sm" onclick="openModal('modal-tambah-mhs')">
-                <i class="fas fa-plus"></i> Tambah Peserta
-            </button>
+            <div style="display:flex;gap:8px;">
+                @if($survey->peserta->count() > 0)
+                <button class="btn btn-secondary btn-sm" onclick="openModal('modal-export-peserta')">
+                    <i class="fas fa-file-excel"></i> Export Excel
+                </button>
+                @endif
+                <button class="btn btn-primary btn-sm" onclick="openModal('modal-tambah-mhs')">
+                    <i class="fas fa-plus"></i> Tambah Peserta
+                </button>
+            </div>
         </div>
 
         @if($survey->peserta->count() > 0)
@@ -331,6 +338,42 @@
         </form>
     </div>
 </div>
+
+{{-- ===== MODAL: EXPORT PESERTA ===== --}}
+<div class="modal-overlay" id="modal-export-peserta">
+    <div class="modal">
+        <div class="modal-header">
+            <h3><i class="fas fa-file-excel" style="color:#10b981;margin-right:8px;"></i>Export Peserta ke Excel</h3>
+            <button class="modal-close" onclick="closeModal('modal-export-peserta')">&times;</button>
+        </div>
+        <form action="{{ route('kelompok.export-peserta', $survey->id) }}" method="GET">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label style="display:flex;align-items:center;justify-content:space-between;">
+                        <span>Pilih Identitas yang Akan Diexport</span>
+                        <span style="font-size:11px;font-weight:400;">
+                            <a href="javascript:void(0)" onclick="toggleAllKolom(true)">Pilih Semua</a>
+                            &nbsp;/&nbsp;
+                            <a href="javascript:void(0)" onclick="toggleAllKolom(false)">Kosongkan</a>
+                        </span>
+                    </label>
+                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px 16px;margin-top:10px;">
+                        @foreach($exportColumns as $key => $label)
+                        <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:400;">
+                            <input type="checkbox" name="kolom[]" value="{{ $key }}" class="kolom-export-checkbox" checked>
+                            {{ $label }}
+                        </label>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-export-peserta')">Batal</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-download"></i> Export</button>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection
 
 @section('js')
@@ -344,6 +387,10 @@ document.querySelectorAll('.modal-overlay').forEach(o => {
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
 });
+
+function toggleAllKolom(checked) {
+    document.querySelectorAll('.kolom-export-checkbox').forEach(cb => cb.checked = checked);
+}
 
 // Filter select options by keyword
 function filterSelect(selectId, keyword) {

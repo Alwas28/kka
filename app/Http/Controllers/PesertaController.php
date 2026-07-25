@@ -14,6 +14,8 @@ class PesertaController extends Controller
      */
     public function index(Request $request)
     {
+        abort_unless(auth()->user()->hasAccess('lihat.peserta'), 403);
+
         $kegiatanList = Kegiatan::orderByDesc('created_at')->get();
 
         $kegiatanId = $request->kegiatan_id;
@@ -64,6 +66,8 @@ class PesertaController extends Controller
      */
     public function dpl(Request $request)
     {
+        abort_unless(auth()->user()->hasAccess('lihat.dpl'), 403);
+
         $kegiatanList = Kegiatan::orderByDesc('created_at')->get();
 
         $kegiatanId = $request->kegiatan_id;

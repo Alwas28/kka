@@ -62,7 +62,7 @@ class DosenPembimbingController extends Controller
             ->join('survey_lokasi',      'kelompok_dosen.survey_lokasi_id', '=', 'survey_lokasi.id')
             ->join('kelompok_mahasiswa', 'survey_lokasi.id',               '=', 'kelompok_mahasiswa.survey_lokasi_id')
             ->where('kelompok_dosen.pegawai_id', $pegawai->id)
-            ->when($tahunId, fn($q) => $q->where('survey_lokasi.kegiatan_id', function ($sub) use ($tahunId) {
+            ->when($tahunId, fn($q) => $q->whereIn('survey_lokasi.kegiatan_id', function ($sub) use ($tahunId) {
                 $sub->select('id')->from('kegiatan')->where('tahun_id', $tahunId);
             }))
             ->selectRaw('survey_lokasi.kegiatan_id, COUNT(DISTINCT kelompok_mahasiswa.mahasiswa_id) as total')

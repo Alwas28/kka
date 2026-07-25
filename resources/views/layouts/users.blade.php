@@ -217,11 +217,11 @@
                         || $u->hasAccess('lihat.dokumen-lainnya')
                         || $u->hasAccess('lihat.terverifikasi');
 
-                    // Peserta & DPL selalu tampil (tidak perlu permission khusus)
-                    $hasPelaksanaan = true;
+                    $hasPelaksanaan = $u->hasAccess('lihat.data-lokasi')
+                        || $u->hasAccess('lihat.peserta')
+                        || $u->hasAccess('lihat.dpl');
 
-                    // $hasPelaksanaan selalu true (Peserta & DPL tanpa guard)
-                    $hasAkademik = true;
+                    $hasAkademik = $hasPendaftaran || $hasPelaksanaan;
                 @endphp
 
                 @if($hasAkademik)
@@ -291,12 +291,16 @@
                         <i class="fas fa-map-marked-alt"></i><span>Data Lokasi</span>
                     </a>
                     @endif
+                    @if($u->hasAccess('lihat.peserta'))
                     <a href="{{ route('peserta.index') }}" class="submenu-item {{ request()->routeIs('peserta.*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
                         <i class="fas fa-user-graduate"></i><span>Peserta</span>
                     </a>
+                    @endif
+                    @if($u->hasAccess('lihat.dpl'))
                     <a href="{{ route('dpl.index') }}" class="submenu-item {{ request()->routeIs('dpl.*') ? 'active' : '' }}" onclick="closeSidebarMobile()">
                         <i class="fas fa-chalkboard-teacher"></i><span>Dosen Pembimbing</span>
                     </a>
+                    @endif
                 </div>
                 @endif
                 @endif
