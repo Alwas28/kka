@@ -244,8 +244,8 @@ Route::middleware('auth')->group(function () {
 
     // Dosen Pembimbing (DPL section)
     Route::get('/dosen-pembimbing',              [DosenPembimbingController::class, 'index'])->name('dosen-pembimbing.index');
-    Route::get('/dosen-pembimbing/{kegiatan}',   [DosenPembimbingController::class, 'detail'])->name('dosen-pembimbing.detail');
-    Route::post('/dosen-pembimbing/{kegiatan}/nilai', [DosenPembimbingController::class, 'saveNilai'])->name('dosen-pembimbing.nilai');
+    Route::get('/dosen-pembimbing/{survey}',      [DosenPembimbingController::class, 'detail'])->name('dosen-pembimbing.detail');
+    Route::post('/dosen-pembimbing/{survey}/nilai', [DosenPembimbingController::class, 'saveNilai'])->name('dosen-pembimbing.nilai');
 
     // Setup Kelompok
     Route::get('/kelompok/{survey}/setup', [KelompokController::class, 'setup'])->name('kelompok.setup');

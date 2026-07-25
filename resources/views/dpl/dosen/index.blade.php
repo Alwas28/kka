@@ -29,45 +29,52 @@
         border: 1px solid rgba(255,255,255,.25);
     }
 
-    /* Kegiatan grid */
-    .kegiatan-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
+    /* Filter bar */
+    .filter-bar {
+        display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+        background: white; border: 1px solid var(--gray-border); border-radius: 12px;
+        padding: 14px 16px; margin-bottom: 22px;
+    }
+    .filter-bar select {
+        padding: 8px 12px; border: 1px solid var(--gray-border); border-radius: 8px;
+        font-size: 13px; font-family: inherit; background: #fff; min-width: 180px;
+    }
+    .filter-reset {
+        padding: 8px 14px; border: 1px solid var(--gray-border); border-radius: 8px;
+        font-size: 12px; font-weight: 600; background: #fff; color: var(--text-secondary);
+        text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+    }
 
-    .kegiatan-card {
+    /* Kelompok grid */
+    .kelompok-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
+
+    .kelompok-card {
+        display: block; text-decoration: none; color: inherit;
         background: white; border-radius: 14px;
         box-shadow: 0 2px 10px rgba(0,0,0,.07);
         border: 1px solid var(--gray-border);
-        overflow: hidden; transition: box-shadow .2s, border-color .2s;
+        overflow: hidden; transition: box-shadow .2s, border-color .2s, transform .15s;
     }
-    .kegiatan-card:hover { box-shadow: 0 4px 18px rgba(165,42,42,.12); border-color: rgba(165,42,42,.3); }
+    .kelompok-card:hover { box-shadow: 0 4px 18px rgba(165,42,42,.12); border-color: rgba(165,42,42,.3); transform: translateY(-1px); }
 
-    .kegiatan-card-header {
-        padding: 16px 18px; border-bottom: 1px solid var(--gray-border);
-        background: var(--gray-light);
+    .kelompok-card-header {
+        padding: 16px 18px; display: flex; align-items: center; gap: 14px;
+        border-bottom: 1px solid var(--gray-border); background: var(--gray-light);
     }
-    .kegiatan-card-header h3 {
-        font-size: 14px; font-weight: 700; color: var(--text-primary);
-        margin: 0 0 6px; line-height: 1.4;
+    .kel-num {
+        width: 44px; height: 44px; border-radius: 11px; flex-shrink: 0;
+        background: linear-gradient(135deg, var(--maroon-dark), var(--maroon-main));
+        color: white; font-size: 18px; font-weight: 800;
+        display: flex; align-items: center; justify-content: center;
     }
-    .kegiatan-date {
-        font-size: 11px; color: var(--text-secondary);
-        display: flex; align-items: center; gap: 5px;
-    }
-    .kegiatan-date i { color: var(--maroon-main); font-size: 10px; }
+    .kelompok-card-header h3 { font-size: 14px; font-weight: 700; color: var(--text-primary); margin: 0 0 3px; }
+    .kelompok-card-header p  { font-size: 11px; color: var(--text-secondary); margin: 0; }
 
-    .kegiatan-card-body { padding: 14px 18px; }
-    .kegiatan-stats { display: flex; gap: 20px; margin-bottom: 14px; }
-    .kegiatan-stat { text-align: center; }
-    .kegiatan-stat .stat-val { font-size: 20px; font-weight: 800; color: var(--text-primary); display: block; }
-    .kegiatan-stat .stat-lbl { font-size: 10px; color: var(--text-secondary); }
-
-    .btn-detail-kg {
-        display: flex; align-items: center; justify-content: center; gap: 6px;
-        width: 100%; padding: 9px 0; border-radius: 8px;
-        border: 1px solid var(--maroon-main); background: rgba(165,42,42,.04);
-        font-size: 13px; font-weight: 600; color: var(--maroon-main);
-        text-decoration: none; transition: all .15s;
-    }
-    .btn-detail-kg:hover { background: var(--maroon-main); color: white; }
+    .kelompok-card-body { padding: 14px 18px; }
+    .kelompok-stats { display: flex; gap: 20px; }
+    .kelompok-stat { text-align: center; }
+    .kelompok-stat .stat-val { font-size: 20px; font-weight: 800; color: var(--text-primary); display: block; }
+    .kelompok-stat .stat-lbl { font-size: 10px; color: var(--text-secondary); }
 
     /* Not DPL state */
     .not-dpl-card {
@@ -90,7 +97,7 @@
 
     <div class="page-header">
         <h2><i class="fas fa-user-graduate" style="color:var(--maroon-main);margin-right:8px;"></i>Dosen Pembimbing</h2>
-        <p>Kegiatan KKA yang Anda bimbing sebagai Dosen Pembimbing Lapangan</p>
+        <p>Kelompok KKA yang Anda bimbing sebagai Dosen Pembimbing Lapangan</p>
     </div>
 
     @if(!$pegawai)
@@ -102,26 +109,6 @@
             Akun <strong>{{ auth()->user()->email }}</strong> tidak terhubung dengan data Dosen Pembimbing Lapangan.<br>
             Hubungi administrator untuk menghubungkan akun Anda dengan data pegawai.
         </p>
-    </div>
-
-    @elseif($kegiatanList->isEmpty())
-    {{-- Terdaftar tapi belum ada assignment --}}
-    <div class="dpl-identity">
-        <div class="dpl-avatar">{{ strtoupper(substr($pegawai->nama, 0, 1)) }}</div>
-        <div class="dpl-identity-info">
-            <h3>{{ $pegawai->nama }}</h3>
-            <p>
-                @if($pegawai->nip) NIP: {{ $pegawai->nip }} &nbsp;&bull;&nbsp; @endif
-                <i class="fas fa-envelope" style="font-size:11px;"></i> {{ $pegawai->email_user ?? auth()->user()->email }}
-            </p>
-        </div>
-        <span class="dpl-identity-badge"><i class="fas fa-chalkboard-teacher" style="margin-right:4px;"></i> DPL</span>
-    </div>
-
-    <div class="empty-state">
-        <i class="fas fa-calendar-times"></i>
-        <h3>Belum ada kegiatan</h3>
-        <p>Anda belum ditugaskan sebagai DPL pada kegiatan KKA manapun.</p>
     </div>
 
     @else
@@ -136,68 +123,79 @@
             </p>
         </div>
         <span class="dpl-identity-badge">
-            <i class="fas fa-chalkboard-teacher" style="margin-right:4px;"></i> DPL &bull; {{ $kegiatanList->count() }} Kegiatan
+            <i class="fas fa-chalkboard-teacher" style="margin-right:4px;"></i> DPL
         </span>
     </div>
 
-    {{-- Filter Tahun --}}
-    @if($tahunList->isNotEmpty())
-    <form method="GET" action="{{ route('dosen-pembimbing.index') }}" style="margin-bottom:20px;">
-        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-            <select name="tahun_id" onchange="this.form.submit()"
-                style="padding:8px 12px; border:1px solid var(--gray-border); border-radius:8px;
-                       font-size:13px; font-family:inherit; background:#fff; min-width:180px;">
-                <option value="">-- Semua Tahun --</option>
-                @foreach($tahunList as $t)
-                    <option value="{{ $t->id }}" {{ $tahunId == $t->id ? 'selected' : '' }}>{{ $t->nama }}</option>
-                @endforeach
-            </select>
-            @if($tahunId)
-                <a href="{{ route('dosen-pembimbing.index') }}"
-                   style="padding:8px 14px; border:1px solid var(--gray-border); border-radius:8px;
-                          font-size:12px; font-weight:600; background:#fff; color:var(--text-secondary);
-                          text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
-                    <i class="fas fa-times"></i> Reset
-                </a>
-            @endif
-        </div>
+    {{-- Filter Tahun & Jenis KKA --}}
+    <form method="GET" action="{{ route('dosen-pembimbing.index') }}" class="filter-bar">
+        <select name="tahun_id" onchange="this.form.submit()">
+            <option value="">-- Pilih Tahun --</option>
+            @foreach($tahunList as $t)
+                <option value="{{ $t->id }}" {{ $tahunId == $t->id ? 'selected' : '' }}>{{ $t->nama }}</option>
+            @endforeach
+        </select>
+        <select name="jenis_kka_id" onchange="this.form.submit()">
+            <option value="">-- Pilih Jenis KKA --</option>
+            @foreach($jenisKkaList as $jk)
+                <option value="{{ $jk->id }}" {{ $jenisKkaId == $jk->id ? 'selected' : '' }}>{{ $jk->nama }}</option>
+            @endforeach
+        </select>
+        @if($tahunId || $jenisKkaId)
+            <a href="{{ route('dosen-pembimbing.index') }}" class="filter-reset">
+                <i class="fas fa-times"></i> Reset
+            </a>
+        @endif
     </form>
-    @endif
 
-    {{-- Grid Kegiatan --}}
-    <div class="kegiatan-grid">
-        @foreach($kegiatanList as $kg)
-        @php
-            $jmlMhs = $mahasiswaCounts->get($kg->id, 0);
-        @endphp
-        <div class="kegiatan-card">
-            <div class="kegiatan-card-header">
-                <h3>{{ $kg->nama }}</h3>
-                <div class="kegiatan-date">
-                    <i class="fas fa-calendar-alt"></i>
-                    {{ \Carbon\Carbon::parse($kg->kegiatan_mulai)->format('d M Y') }}
-                    &ndash;
-                    {{ \Carbon\Carbon::parse($kg->kegiatan_selesai)->format('d M Y') }}
+    @if(!$tahunId || !$jenisKkaId)
+    <div class="empty-state">
+        <i class="fas fa-filter"></i>
+        <h3>Pilih Tahun dan Jenis KKA</h3>
+        <p>Pilih kedua filter di atas untuk menampilkan kelompok yang Anda bimbing.</p>
+    </div>
+
+    @elseif($kelompokList->isEmpty())
+    <div class="empty-state">
+        <i class="fas fa-map-marked-alt"></i>
+        <h3>Tidak ada kelompok</h3>
+        <p>Anda belum ditugaskan sebagai DPL pada kelompok manapun untuk kombinasi filter ini.</p>
+    </div>
+
+    @else
+    <div class="kelompok-grid">
+        @foreach($kelompokList as $kel)
+        <a href="{{ route('dosen-pembimbing.detail', $kel->survey_id) }}" class="kelompok-card">
+            <div class="kelompok-card-header">
+                <div class="kel-num">{{ $kel->kelompok }}</div>
+                <div>
+                    <h3>Kelompok {{ $kel->kelompok }}</h3>
+                    <p>
+                        @if($kel->desa)
+                            <i class="fas fa-map-marker-alt" style="font-size:10px;"></i>
+                            {{ $kel->desa }}{{ $kel->kecamatan ? ', ' . $kel->kecamatan : '' }}
+                        @else
+                            Lokasi belum diatur
+                        @endif
+                    </p>
                 </div>
             </div>
-            <div class="kegiatan-card-body">
-                <div class="kegiatan-stats">
-                    <div class="kegiatan-stat">
-                        <span class="stat-val">{{ $kg->jumlah_kelompok }}</span>
-                        <span class="stat-lbl">Kelompok</span>
-                    </div>
-                    <div class="kegiatan-stat">
-                        <span class="stat-val">{{ $jmlMhs }}</span>
+            <div class="kelompok-card-body">
+                <div class="kelompok-stats">
+                    <div class="kelompok-stat">
+                        <span class="stat-val">{{ $kel->jumlah_peserta }}</span>
                         <span class="stat-lbl">Mahasiswa</span>
                     </div>
+                    <div class="kelompok-stat">
+                        <span class="stat-val">{{ $kel->jumlah_dinilai }}/{{ $kel->jumlah_peserta }}</span>
+                        <span class="stat-lbl">Sudah Dinilai</span>
+                    </div>
                 </div>
-                <a href="{{ route('dosen-pembimbing.detail', $kg->id) }}" class="btn-detail-kg">
-                    <i class="fas fa-eye"></i> Lihat Detail
-                </a>
             </div>
-        </div>
+        </a>
         @endforeach
     </div>
+    @endif
 
     @endif
 

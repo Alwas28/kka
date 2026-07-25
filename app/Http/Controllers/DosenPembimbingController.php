@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SurveyLokasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +23,15 @@ class DosenPembimbingController extends Controller
             ->first();
     }
 
+    /** Pastikan pegawai ini adalah DPL yang ditugaskan ke kelompok (survey_lokasi) tsb. */
+    private function isMyKelompok(int $pegawaiId, int $surveyLokasiId): bool
+    {
+        return DB::table('kelompok_dosen')
+            ->where('pegawai_id', $pegawaiId)
+            ->where('survey_lokasi_id', $surveyLokasiId)
+            ->exists();
+    }
+
     // ── INDEX ─────────────────────────────────────────────────────────────────
     public function index(Request $request)
     {
@@ -31,122 +41,119 @@ class DosenPembimbingController extends Controller
 
         if (!$pegawai) {
             return view('dpl.dosen.index', [
-                'pegawai'         => null,
-                'kegiatanList'    => collect(),
-                'mahasiswaCounts' => collect(),
-                'tahunList'       => collect(),
-                'tahunId'         => null,
+                'pegawai'      => null,
+                'tahunList'    => collect(),
+                'jenisKkaList' => collect(),
+                'tahunId'      => null,
+                'jenisKkaId'   => null,
+                'kelompokList' => collect(),
             ]);
         }
 
-        $tahunList = DB::table('tahun')->orderByDesc('nama')->get();
-        $tahunId   = $request->tahun_id;
+        $tahunList    = DB::table('tahun')->orderByDesc('nama')->get();
+        $jenisKkaList = DB::table('jenis_kka')->orderBy('nama')->get();
+        $tahunId      = $request->tahun_id;
+        $jenisKkaId   = $request->jenis_kka_id;
 
-        $kegiatanList = DB::table('kegiatan')
-            ->join('survey_lokasi',  'kegiatan.id',          '=', 'survey_lokasi.kegiatan_id')
-            ->join('kelompok_dosen', 'survey_lokasi.id',     '=', 'kelompok_dosen.survey_lokasi_id')
-            ->where('kelompok_dosen.pegawai_id', $pegawai->id)
-            ->when($tahunId, fn($q) => $q->where('kegiatan.tahun_id', $tahunId))
-            ->select([
-                'kegiatan.id',
-                'kegiatan.nama',
-                'kegiatan.kegiatan_mulai',
-                'kegiatan.kegiatan_selesai',
-                DB::raw('COUNT(DISTINCT survey_lokasi.id) as jumlah_kelompok'),
-            ])
-            ->groupBy('kegiatan.id', 'kegiatan.nama', 'kegiatan.kegiatan_mulai', 'kegiatan.kegiatan_selesai')
-            ->orderByDesc('kegiatan.id')
-            ->get();
+        $kelompokList = collect();
 
-        $mahasiswaCounts = DB::table('kelompok_dosen')
-            ->join('survey_lokasi',      'kelompok_dosen.survey_lokasi_id', '=', 'survey_lokasi.id')
-            ->join('kelompok_mahasiswa', 'survey_lokasi.id',               '=', 'kelompok_mahasiswa.survey_lokasi_id')
-            ->where('kelompok_dosen.pegawai_id', $pegawai->id)
-            ->when($tahunId, fn($q) => $q->whereIn('survey_lokasi.kegiatan_id', function ($sub) use ($tahunId) {
-                $sub->select('id')->from('kegiatan')->where('tahun_id', $tahunId);
-            }))
-            ->selectRaw('survey_lokasi.kegiatan_id, COUNT(DISTINCT kelompok_mahasiswa.mahasiswa_id) as total')
-            ->groupBy('survey_lokasi.kegiatan_id')
-            ->pluck('total', 'kegiatan_id');
+        if ($tahunId && $jenisKkaId) {
+            $kelompokList = DB::table('kelompok_dosen as kd')
+                ->join('survey_lokasi as sl', 'kd.survey_lokasi_id', '=', 'sl.id')
+                ->join('kegiatan as k',       'sl.kegiatan_id',      '=', 'k.id')
+                ->leftJoin('desa',      'sl.desa_id',          '=', 'desa.id')
+                ->leftJoin('kecamatan', 'desa.kecamatan_id',   '=', 'kecamatan.id')
+                ->where('kd.pegawai_id', $pegawai->id)
+                ->where('k.tahun_id', $tahunId)
+                ->where('k.jenis_kka_id', $jenisKkaId)
+                ->whereNotNull('sl.kelompok')
+                ->select([
+                    'sl.id as survey_id',
+                    'sl.kelompok',
+                    'desa.nama as desa',
+                    'kecamatan.nama as kecamatan',
+                    'k.nama as kegiatan_nama',
+                ])
+                ->orderBy('sl.kelompok')
+                ->get();
+
+            $surveyIds = $kelompokList->pluck('survey_id');
+
+            $jumlahPeserta = DB::table('kelompok_mahasiswa')
+                ->whereIn('survey_lokasi_id', $surveyIds)
+                ->selectRaw('survey_lokasi_id, COUNT(*) as total')
+                ->groupBy('survey_lokasi_id')
+                ->pluck('total', 'survey_lokasi_id');
+
+            $jumlahDinilai = DB::table('nilai_mahasiswa')
+                ->whereIn('survey_lokasi_id', $surveyIds)
+                ->whereNotNull('nilai_akhir')
+                ->selectRaw('survey_lokasi_id, COUNT(*) as total')
+                ->groupBy('survey_lokasi_id')
+                ->pluck('total', 'survey_lokasi_id');
+
+            $kelompokList = $kelompokList->map(function ($k) use ($jumlahPeserta, $jumlahDinilai) {
+                $k->jumlah_peserta = $jumlahPeserta->get($k->survey_id, 0);
+                $k->jumlah_dinilai = $jumlahDinilai->get($k->survey_id, 0);
+                return $k;
+            });
+        }
 
         return view('dpl.dosen.index', compact(
-            'pegawai', 'kegiatanList', 'mahasiswaCounts', 'tahunList', 'tahunId'
+            'pegawai', 'tahunList', 'jenisKkaList', 'tahunId', 'jenisKkaId', 'kelompokList'
         ));
     }
 
-    // ── DETAIL ────────────────────────────────────────────────────────────────
-    public function detail(Request $request, $kegiatanId)
+    // ── DETAIL (per kelompok) ────────────────────────────────────────────────
+    public function detail(SurveyLokasi $survey)
     {
         abort_unless(Auth::user()->hasAccess('lihat.dosen-pembimbing'), 403);
 
         $pegawai = $this->getMyPegawai();
         abort_if(!$pegawai, 403, 'Anda tidak terdaftar sebagai Dosen Pembimbing.');
+        abort_unless($this->isMyKelompok($pegawai->id, $survey->id), 403, 'Anda bukan Dosen Pembimbing untuk kelompok ini.');
 
-        $kegiatan = DB::table('kegiatan')->where('id', $kegiatanId)->first();
+        $survey->load(['desa.kecamatan.kabupaten.provinsi', 'kegiatan']);
+        $kegiatan = $survey->kegiatan;
         abort_if(!$kegiatan, 404);
 
-        // Kelompok DPL ini
-        $kelompokList = DB::table('kelompok_dosen')
-            ->join('survey_lokasi', 'kelompok_dosen.survey_lokasi_id', '=', 'survey_lokasi.id')
-            ->leftJoin('desa',      'survey_lokasi.desa_id',    '=', 'desa.id')
-            ->leftJoin('kecamatan', 'desa.kecamatan_id',        '=', 'kecamatan.id')
-            ->leftJoin('kabupaten', 'kecamatan.kabupaten_id',   '=', 'kabupaten.id')
-            ->where('kelompok_dosen.pegawai_id', $pegawai->id)
-            ->where('survey_lokasi.kegiatan_id', $kegiatanId)
+        // ── Peserta ──────────────────────────────────────────────
+        $peserta = DB::table('kelompok_mahasiswa as km')
+            ->join('mahasiswa as m',     'km.mahasiswa_id',      '=', 'm.id')
+            ->leftJoin('program_studi as ps', 'm.program_studi_id', '=', 'ps.id')
+            ->where('km.survey_lokasi_id', $survey->id)
             ->select([
-                'survey_lokasi.id as survey_id',
-                'survey_lokasi.kelompok',
-                'desa.nama as desa',
-                'kecamatan.nama as kecamatan',
-                'kabupaten.nama as kabupaten',
+                'm.id as mahasiswa_id', 'm.nim', 'm.nama',
+                'ps.nama as prodi', 'km.is_koordinator',
             ])
-            ->orderBy('survey_lokasi.kelompok')
+            ->orderByRaw('km.is_koordinator DESC')
+            ->orderBy('m.nama')
             ->get();
 
-        $surveyIds = $kelompokList->pluck('survey_id');
-
-        // Peserta per kelompok
-        $pesertaByKelompok = DB::table('kelompok_mahasiswa')
-            ->join('mahasiswa',         'kelompok_mahasiswa.mahasiswa_id', '=', 'mahasiswa.id')
-            ->leftJoin('program_studi', 'mahasiswa.program_studi_id',      '=', 'program_studi.id')
-            ->whereIn('kelompok_mahasiswa.survey_lokasi_id', $surveyIds)
-            ->select([
-                'kelompok_mahasiswa.survey_lokasi_id',
-                'kelompok_mahasiswa.is_koordinator',
-                'mahasiswa.id as mahasiswa_id',
-                'mahasiswa.nim',
-                'mahasiswa.nama',
-                'program_studi.nama as prodi',
-            ])
-            ->orderByRaw('kelompok_mahasiswa.is_koordinator DESC')
-            ->orderBy('mahasiswa.nama')
-            ->get()
-            ->groupBy('survey_lokasi_id');
-
-        // Logbook count per mahasiswa per kelompok
         $logbookPerMhs = DB::table('logbook')
-            ->whereIn('survey_lokasi_id', $surveyIds)
-            ->selectRaw('mahasiswa_id, survey_lokasi_id, COUNT(*) as total')
-            ->groupBy('mahasiswa_id', 'survey_lokasi_id')
+            ->where('survey_lokasi_id', $survey->id)
+            ->selectRaw('mahasiswa_id, COUNT(*) as total')
+            ->groupBy('mahasiswa_id')
+            ->pluck('total', 'mahasiswa_id');
+
+        $laporanIndividuByMhs = DB::table('laporan_individu')
+            ->leftJoin('kegiatan_dokumen', 'laporan_individu.kegiatan_dokumen_id', '=', 'kegiatan_dokumen.id')
+            ->where('laporan_individu.survey_lokasi_id', $survey->id)
+            ->select([
+                'laporan_individu.mahasiswa_id',
+                'laporan_individu.file_path',
+                'laporan_individu.file_name',
+                'kegiatan_dokumen.nama as dokumen_nama',
+            ])
             ->get()
-            ->groupBy('survey_lokasi_id')
-            ->map(fn($rows) => $rows->pluck('total', 'mahasiswa_id'));
+            ->groupBy('mahasiswa_id');
 
-        // Logbook total per kelompok
-        $logbookTotalByKel = DB::table('logbook')
-            ->whereIn('survey_lokasi_id', $surveyIds)
-            ->selectRaw('survey_lokasi_id, COUNT(*) as total')
-            ->groupBy('survey_lokasi_id')
-            ->pluck('total', 'survey_lokasi_id');
-
-        // Laporan akhir per kelompok
-        $laporanAkhirByKelompok = DB::table('laporan_akhir')
-            ->join('mahasiswa',           'laporan_akhir.mahasiswa_id',        '=', 'mahasiswa.id')
-            ->leftJoin('kegiatan_dokumen','laporan_akhir.kegiatan_dokumen_id', '=', 'kegiatan_dokumen.id')
-            ->whereIn('laporan_akhir.survey_lokasi_id', $surveyIds)
+        $laporanAkhir = DB::table('laporan_akhir')
+            ->join('mahasiswa', 'laporan_akhir.mahasiswa_id', '=', 'mahasiswa.id')
+            ->leftJoin('kegiatan_dokumen', 'laporan_akhir.kegiatan_dokumen_id', '=', 'kegiatan_dokumen.id')
+            ->where('laporan_akhir.survey_lokasi_id', $survey->id)
             ->select([
                 'laporan_akhir.id',
-                'laporan_akhir.survey_lokasi_id',
                 'laporan_akhir.file_path',
                 'laporan_akhir.file_name',
                 'laporan_akhir.file_size',
@@ -155,69 +162,39 @@ class DosenPembimbingController extends Controller
                 'kegiatan_dokumen.nama as dokumen_nama',
                 'mahasiswa.nama as koordinator_nama',
             ])
-            ->get()
-            ->groupBy('survey_lokasi_id');
+            ->get();
 
-        // Laporan individu per mahasiswa
-        $laporanIndividuByMhs = DB::table('laporan_individu')
-            ->leftJoin('kegiatan_dokumen', 'laporan_individu.kegiatan_dokumen_id', '=', 'kegiatan_dokumen.id')
-            ->whereIn('laporan_individu.survey_lokasi_id', $surveyIds)
-            ->select([
-                'laporan_individu.mahasiswa_id',
-                'laporan_individu.survey_lokasi_id',
-                'laporan_individu.file_path',
-                'laporan_individu.file_name',
-                'kegiatan_dokumen.nama as dokumen_nama',
-            ])
-            ->get()
-            ->groupBy(fn($r) => $r->survey_lokasi_id . '_' . $r->mahasiswa_id);
-
-        // Komponen penilaian kegiatan ini
+        // ── Nilai ────────────────────────────────────────────────
         $komponenPenilaian = DB::table('kegiatan_komponen_penilaian')
-            ->where('kegiatan_id', $kegiatanId)
+            ->where('kegiatan_id', $kegiatan->id)
             ->orderBy('urutan')
             ->get();
 
-        // Nilai per komponen: [survey_id][mahasiswa_id][komponen_id] = nilai
-        $nilaiKomponenRaw = DB::table('nilai_komponen')
-            ->whereIn('survey_lokasi_id', $surveyIds)
-            ->select([
-                'mahasiswa_id',
-                'survey_lokasi_id',
-                'kegiatan_komponen_penilaian_id as komponen_id',
-                'nilai',
-            ])
-            ->get();
-
-        $nilaiKomponenBySurvey = [];
-        foreach ($nilaiKomponenRaw as $nk) {
-            $nilaiKomponenBySurvey[$nk->survey_lokasi_id][$nk->mahasiswa_id][$nk->komponen_id] = $nk->nilai;
+        $nilaiKomponenByMhs = [];
+        foreach (DB::table('nilai_komponen')
+            ->where('survey_lokasi_id', $survey->id)
+            ->select(['mahasiswa_id', 'kegiatan_komponen_penilaian_id as komponen_id', 'nilai'])
+            ->get() as $nk) {
+            $nilaiKomponenByMhs[$nk->mahasiswa_id][$nk->komponen_id] = $nk->nilai;
         }
 
-        // Nilai akhir + catatan
-        $nilaiAkhirByKelompok = DB::table('nilai_mahasiswa')
-            ->whereIn('survey_lokasi_id', $surveyIds)
-            ->select(['mahasiswa_id', 'survey_lokasi_id', 'nilai_akhir', 'catatan'])
+        $nilaiAkhirByMhs = DB::table('nilai_mahasiswa')
+            ->where('survey_lokasi_id', $survey->id)
+            ->select(['mahasiswa_id', 'nilai_akhir', 'catatan'])
             ->get()
-            ->groupBy('survey_lokasi_id')
-            ->map(fn($rows) => $rows->keyBy('mahasiswa_id'));
+            ->keyBy('mahasiswa_id');
 
-        // Grade table
         $gradeTable = DB::table('kegiatan_grade')
-            ->where('kegiatan_id', $kegiatanId)
+            ->where('kegiatan_id', $kegiatan->id)
             ->orderByDesc('nilai_min')
             ->get();
 
-        [$nilaiTerbuka, $tahapanPelaporan] = $this->cekPeriodePenilaian($kegiatanId);
+        [$nilaiTerbuka, $tahapanPelaporan] = $this->cekPeriodePenilaian($kegiatan->id);
 
         return view('dpl.dosen.detail', compact(
-            'pegawai', 'kegiatan',
-            'kelompokList', 'pesertaByKelompok',
-            'logbookPerMhs', 'logbookTotalByKel',
-            'laporanAkhirByKelompok', 'laporanIndividuByMhs',
-            'komponenPenilaian',
-            'nilaiKomponenBySurvey', 'nilaiAkhirByKelompok',
-            'gradeTable',
+            'pegawai', 'survey', 'kegiatan', 'peserta',
+            'logbookPerMhs', 'laporanIndividuByMhs', 'laporanAkhir',
+            'komponenPenilaian', 'nilaiKomponenByMhs', 'nilaiAkhirByMhs', 'gradeTable',
             'nilaiTerbuka', 'tahapanPelaporan'
         ));
     }
@@ -238,26 +215,27 @@ class DosenPembimbingController extends Controller
         return [$terbuka, $tahapan];
     }
 
-    // ── SAVE NILAI ────────────────────────────────────────────────────────────
-    public function saveNilai(Request $request, $kegiatanId)
+    // ── SAVE NILAI (per kelompok) ────────────────────────────────────────────
+    public function saveNilai(Request $request, SurveyLokasi $survey)
     {
         abort_unless(Auth::user()->hasAccess('lihat.dosen-pembimbing'), 403);
 
         $pegawai = $this->getMyPegawai();
         abort_if(!$pegawai, 403);
+        abort_unless($this->isMyKelompok($pegawai->id, $survey->id), 403);
+
+        $kegiatanId = $survey->kegiatan_id;
+        abort_if(!$kegiatanId, 404);
 
         [$nilaiTerbuka] = $this->cekPeriodePenilaian((int) $kegiatanId);
         abort_unless($nilaiTerbuka, 403, 'Periode penilaian telah berakhir.');
 
         $kegiatanNama = DB::table('kegiatan')->where('id', $kegiatanId)->value('nama') ?? 'KKA';
 
-        $surveyIds = DB::table('kelompok_dosen')
-            ->join('survey_lokasi', 'kelompok_dosen.survey_lokasi_id', '=', 'survey_lokasi.id')
-            ->where('kelompok_dosen.pegawai_id', $pegawai->id)
-            ->where('survey_lokasi.kegiatan_id', $kegiatanId)
-            ->pluck('survey_lokasi.id');
+        $mahasiswaIds = DB::table('kelompok_mahasiswa')
+            ->where('survey_lokasi_id', $survey->id)
+            ->pluck('mahasiswa_id');
 
-        // Komponen valid: id → persentase
         $komponenList = DB::table('kegiatan_komponen_penilaian')
             ->where('kegiatan_id', $kegiatanId)
             ->orderBy('urutan')
@@ -265,19 +243,17 @@ class DosenPembimbingController extends Controller
             ->keyBy('id');
 
         $request->validate([
-            'nilai'                    => 'required|array',
-            'nilai.*.mahasiswa_id'     => 'required|integer',
-            'nilai.*.survey_lokasi_id' => 'required|integer',
-            'nilai.*.catatan'          => 'nullable|string|max:500',
-            'nilai.*.komponen'         => 'nullable|array',
-            'nilai.*.komponen.*'       => 'nullable|numeric|min:0|max:100',
+            'nilai'                => 'required|array',
+            'nilai.*.mahasiswa_id' => 'required|integer',
+            'nilai.*.catatan'      => 'nullable|string|max:500',
+            'nilai.*.komponen'     => 'nullable|array',
+            'nilai.*.komponen.*'   => 'nullable|numeric|min:0|max:100',
         ]);
 
         foreach ($request->nilai as $item) {
-            $surveyId = (int) $item['survey_lokasi_id'];
-            $mhsId    = (int) $item['mahasiswa_id'];
+            $mhsId = (int) $item['mahasiswa_id'];
 
-            if (!$surveyIds->contains($surveyId)) continue;
+            if (!$mahasiswaIds->contains($mhsId)) continue;
 
             $kompoValues     = $item['komponen'] ?? [];
             $nilaiAkhir      = null;
@@ -291,7 +267,7 @@ class DosenPembimbingController extends Controller
                 DB::table('nilai_komponen')->updateOrInsert(
                     [
                         'mahasiswa_id'                   => $mhsId,
-                        'survey_lokasi_id'               => $surveyId,
+                        'survey_lokasi_id'               => $survey->id,
                         'kegiatan_komponen_penilaian_id' => $kompoId,
                     ],
                     [
@@ -315,14 +291,14 @@ class DosenPembimbingController extends Controller
             // Cek apakah ini penilaian pertama (belum ada nilai_akhir sebelumnya)
             $sudahDinilai = DB::table('nilai_mahasiswa')
                 ->where('mahasiswa_id', $mhsId)
-                ->where('survey_lokasi_id', $surveyId)
+                ->where('survey_lokasi_id', $survey->id)
                 ->whereNotNull('nilai_akhir')
                 ->exists();
 
             DB::table('nilai_mahasiswa')->updateOrInsert(
                 [
                     'mahasiswa_id'     => $mhsId,
-                    'survey_lokasi_id' => $surveyId,
+                    'survey_lokasi_id' => $survey->id,
                 ],
                 [
                     'pegawai_id'  => $pegawai->id,

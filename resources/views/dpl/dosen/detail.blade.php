@@ -11,36 +11,23 @@
     .breadcrumb a { color: var(--maroon-main); text-decoration: none; font-weight: 600; }
     .breadcrumb a:hover { text-decoration: underline; }
 
-    .kegiatan-header {
+    .kelompok-header {
         background: linear-gradient(135deg, var(--maroon-dark) 0%, var(--maroon-main) 100%);
-        border-radius: 14px; padding: 22px 26px; margin-bottom: 24px; color: white;
+        border-radius: 14px; padding: 22px 26px; margin-bottom: 20px; color: white;
         box-shadow: 0 6px 20px rgba(165,42,42,.25);
         display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
     }
-    .kegiatan-icon {
+    .kel-num-lg {
         width: 52px; height: 52px; border-radius: 13px; flex-shrink: 0;
         background: rgba(255,255,255,.2); border: 2px solid rgba(255,255,255,.35);
-        display: flex; align-items: center; justify-content: center; font-size: 22px;
+        display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800;
     }
-    .kegiatan-header-info h2 { font-size: 17px; font-weight: 700; margin: 0 0 4px; }
-    .kegiatan-header-info p  { font-size: 12px; margin: 0; opacity: .85; }
-    .kegiatan-header-stats { margin-left: auto; display: flex; gap: 24px; flex-wrap: wrap; }
+    .kelompok-header-info h2 { font-size: 17px; font-weight: 700; margin: 0 0 4px; }
+    .kelompok-header-info p  { font-size: 12px; margin: 0; opacity: .85; }
+    .kelompok-header-stats { margin-left: auto; display: flex; gap: 24px; flex-wrap: wrap; }
     .header-stat { text-align: center; }
     .header-stat .val { font-size: 22px; font-weight: 800; display: block; }
     .header-stat .lbl { font-size: 10px; opacity: .75; }
-
-    /* Komponen info */
-    .komponen-bar {
-        background: white; border: 1px solid var(--gray-border); border-radius: 10px;
-        padding: 12px 16px; margin-bottom: 20px;
-        display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-    }
-    .komponen-label { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .4px; white-space: nowrap; }
-    .komponen-tag {
-        display: inline-flex; align-items: center; gap: 5px;
-        background: rgba(165,42,42,.07); border: 1px solid rgba(165,42,42,.15);
-        border-radius: 20px; padding: 4px 10px; font-size: 11px; font-weight: 600; color: var(--maroon-main);
-    }
 
     /* Alert */
     .alert-success {
@@ -49,29 +36,23 @@
         font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px;
     }
 
-    /* Kelompok section */
-    .kel-section {
-        background: white; border-radius: 14px; border: 1px solid var(--gray-border);
-        box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 24px; overflow: hidden;
+    /* Tabs */
+    .kel-tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--gray-border); margin-bottom: 20px; flex-wrap: wrap; }
+    .kel-tab-btn {
+        display: flex; align-items: center; gap: 7px;
+        padding: 11px 18px; border: none; background: none; cursor: pointer;
+        font-size: 13px; font-weight: 600; color: var(--text-secondary); font-family: inherit;
+        border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all .15s;
     }
-    .kel-section-header {
-        padding: 16px 20px; background: var(--gray-light); border-bottom: 1px solid var(--gray-border);
-        display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
-    }
-    .kel-num {
-        width: 44px; height: 44px; border-radius: 11px; flex-shrink: 0;
-        background: linear-gradient(135deg, var(--maroon-dark), var(--maroon-main));
-        color: white; font-size: 18px; font-weight: 800;
-        display: flex; align-items: center; justify-content: center;
-    }
-    .kel-head-info h4 { font-size: 14px; font-weight: 700; color: var(--text-primary); margin: 0 0 2px; }
-    .kel-head-info p  { font-size: 11px; color: var(--text-secondary); margin: 0; }
-    .kel-head-stats { margin-left: auto; display: flex; gap: 20px; }
-    .kel-stat-mini { text-align: center; }
-    .kel-stat-mini .val { font-size: 16px; font-weight: 800; color: var(--text-primary); display: block; }
-    .kel-stat-mini .lbl { font-size: 10px; color: var(--text-secondary); }
+    .kel-tab-btn:hover { color: var(--maroon-main); }
+    .kel-tab-btn.active { color: var(--maroon-main); border-bottom-color: var(--maroon-main); }
+    .kel-tab-pane { display: none; }
+    .kel-tab-pane.active { display: block; }
 
-    .kel-section-body { padding: 20px; }
+    .card-box {
+        background: white; border-radius: 14px; border: 1px solid var(--gray-border);
+        box-shadow: 0 2px 8px rgba(0,0,0,.06); padding: 20px; margin-bottom: 20px;
+    }
 
     /* Sub-section titles */
     .sub-title {
@@ -162,6 +143,19 @@
         background: var(--gray-light); border-radius: 8px;
     }
 
+    /* Komponen info */
+    .komponen-bar {
+        background: var(--gray-light); border: 1px solid var(--gray-border); border-radius: 10px;
+        padding: 12px 16px; margin-bottom: 16px;
+        display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .komponen-label { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .4px; white-space: nowrap; }
+    .komponen-tag {
+        display: inline-flex; align-items: center; gap: 5px;
+        background: rgba(165,42,42,.07); border: 1px solid rgba(165,42,42,.15);
+        border-radius: 20px; padding: 4px 10px; font-size: 11px; font-weight: 600; color: var(--maroon-main);
+    }
+
     /* Penilaian */
     .nilai-tbl-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--gray-border); }
     .nilai-tbl { width: 100%; border-collapse: collapse; min-width: 680px; }
@@ -215,7 +209,6 @@
     }
     .btn-save-nilai:hover { background: var(--maroon-dark); }
 
-    /* Nilai locked / read-only */
     .nilai-locked-banner {
         display: flex; align-items: center; gap: 12px;
         background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px;
@@ -227,6 +220,28 @@
     .nilai-input[readonly] {
         background: var(--gray-light); color: var(--text-secondary); cursor: not-allowed;
     }
+
+    /* Info Lokasi */
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px 24px; }
+    .info-item .info-label {
+        font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+        color: var(--text-secondary); margin-bottom: 4px;
+    }
+    .info-item .info-value { font-size: 13px; color: var(--text-primary); font-weight: 500; line-height: 1.5; }
+    .info-item .info-value.muted { color: var(--text-secondary); font-weight: 400; }
+    .info-full { grid-column: 1 / -1; }
+    .status-pill {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+    }
+    .status-pill.ok   { background: #d1fae5; color: #059669; }
+    .status-pill.no   { background: #fee2e2; color: #dc2626; }
+    .status-pill.mid  { background: #fef3c7; color: #d97706; }
+    .gmaps-link {
+        display: inline-flex; align-items: center; gap: 6px;
+        color: var(--maroon-main); font-weight: 600; text-decoration: none; font-size: 13px;
+    }
+    .gmaps-link:hover { text-decoration: underline; }
 
     .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
     .empty-state i { font-size: 48px; color: var(--gray-border); margin-bottom: 15px; display: block; }
@@ -243,55 +258,33 @@
             <i class="fas fa-user-graduate"></i> Dosen Pembimbing
         </a>
         <i class="fas fa-chevron-right" style="font-size:10px;"></i>
-        <span>{{ $kegiatan->nama }}</span>
+        <span>Kelompok {{ $survey->kelompok }}</span>
     </div>
 
-    {{-- Header kegiatan --}}
-    @php
-        $totalMhsAll  = $pesertaByKelompok->map(fn($c) => $c->count())->sum();
-        $totalLogAll  = $logbookTotalByKel->sum();
-    @endphp
-    <div class="kegiatan-header">
-        <div class="kegiatan-icon"><i class="fas fa-calendar-alt"></i></div>
-        <div class="kegiatan-header-info">
-            <h2>{{ $kegiatan->nama }}</h2>
+    {{-- Header kelompok --}}
+    <div class="kelompok-header">
+        <div class="kel-num-lg">{{ $survey->kelompok }}</div>
+        <div class="kelompok-header-info">
+            <h2>Kelompok {{ $survey->kelompok }} &mdash; {{ $kegiatan->nama }}</h2>
             <p>
-                <i class="fas fa-calendar" style="font-size:10px;"></i>
-                {{ \Carbon\Carbon::parse($kegiatan->kegiatan_mulai)->format('d M Y') }}
-                &ndash;
-                {{ \Carbon\Carbon::parse($kegiatan->kegiatan_selesai)->format('d M Y') }}
+                <i class="fas fa-map-marker-alt" style="font-size:10px;"></i>
+                {{ $survey->lokasi_lengkap }}
                 &nbsp;&bull;&nbsp;
                 <i class="fas fa-chalkboard-teacher" style="font-size:10px;"></i>
                 {{ $pegawai->nama }}
             </p>
         </div>
-        <div class="kegiatan-header-stats">
+        <div class="kelompok-header-stats">
             <div class="header-stat">
-                <span class="val">{{ $kelompokList->count() }}</span>
-                <span class="lbl">Kelompok</span>
-            </div>
-            <div class="header-stat">
-                <span class="val">{{ $totalMhsAll }}</span>
+                <span class="val">{{ $peserta->count() }}</span>
                 <span class="lbl">Mahasiswa</span>
             </div>
             <div class="header-stat">
-                <span class="val">{{ $totalLogAll }}</span>
+                <span class="val">{{ $logbookPerMhs->sum() }}</span>
                 <span class="lbl">Logbook</span>
             </div>
         </div>
     </div>
-
-    {{-- Komponen Penilaian info --}}
-    @if($komponenPenilaian->isNotEmpty())
-    <div class="komponen-bar">
-        <span class="komponen-label"><i class="fas fa-sliders-h" style="margin-right:5px;"></i>Komponen Penilaian</span>
-        @foreach($komponenPenilaian as $kp)
-        <span class="komponen-tag">
-            {{ $kp->nama }} &mdash; <strong>{{ $kp->persentase }}%</strong>
-        </span>
-        @endforeach
-    </div>
-    @endif
 
     {{-- Flash success --}}
     @if(session('success'))
@@ -300,61 +293,25 @@
     </div>
     @endif
 
-    @if($kelompokList->isEmpty())
-    <div class="empty-state">
-        <i class="fas fa-map-marked-alt"></i>
-        <h3>Tidak ada kelompok</h3>
-        <p>Anda belum ditugaskan ke kelompok manapun dalam kegiatan ini.</p>
+    {{-- Tabs --}}
+    <div class="kel-tabs">
+        <button type="button" class="kel-tab-btn active" onclick="switchKelTab('peserta', this)">
+            <i class="fas fa-users"></i> Peserta
+        </button>
+        <button type="button" class="kel-tab-btn" onclick="switchKelTab('nilai', this)">
+            <i class="fas fa-star-half-alt"></i> Nilai
+        </button>
+        <button type="button" class="kel-tab-btn" onclick="switchKelTab('lokasi', this)">
+            <i class="fas fa-map-marked-alt"></i> Info Lokasi
+        </button>
     </div>
-    @else
 
-    @foreach($kelompokList as $kel)
-    @php
-        $pesertaKel      = $pesertaByKelompok->get($kel->survey_id, collect());
-        $logbookMhs      = $logbookPerMhs->get($kel->survey_id, collect());
-        $logbookTotal    = $logbookTotalByKel->get($kel->survey_id, 0);
-        $laporanAkhir    = $laporanAkhirByKelompok->get($kel->survey_id, collect());
-        $nilaiKompoKel   = $nilaiKomponenBySurvey[$kel->survey_id] ?? [];
-        $nilaiAkhirKel   = $nilaiAkhirByKelompok->get($kel->survey_id, collect());
-    @endphp
-
-    <div class="kel-section">
-        {{-- Kelompok header --}}
-        <div class="kel-section-header">
-            <div class="kel-num">{{ $kel->kelompok }}</div>
-            <div class="kel-head-info">
-                <h4>Kelompok {{ $kel->kelompok }}</h4>
-                <p>
-                    @if($kel->desa)
-                        <i class="fas fa-map-marker-alt" style="font-size:10px;"></i>
-                        {{ $kel->desa }}{{ $kel->kecamatan ? ', ' . $kel->kecamatan : '' }}
-                    @else
-                        Lokasi belum diatur
-                    @endif
-                </p>
-            </div>
-            <div class="kel-head-stats">
-                <div class="kel-stat-mini">
-                    <span class="val">{{ $pesertaKel->count() }}</span>
-                    <span class="lbl">Mahasiswa</span>
-                </div>
-                <div class="kel-stat-mini">
-                    <span class="val">{{ $logbookTotal }}</span>
-                    <span class="lbl">Logbook</span>
-                </div>
-                <div class="kel-stat-mini">
-                    <span class="val">{{ $laporanAkhir->count() }}</span>
-                    <span class="lbl">Laporan</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="kel-section-body">
-
-            {{-- 1. Daftar Mahasiswa --}}
+    {{-- TAB: PESERTA --}}
+    <div class="kel-tab-pane active" id="kel-tab-peserta">
+        <div class="card-box">
             <div class="sub-title"><i class="fas fa-users"></i> Daftar Mahasiswa</div>
 
-            @if($pesertaKel->isNotEmpty())
+            @if($peserta->isNotEmpty())
             <div class="mhs-tbl-wrap">
                 <table class="mhs-tbl">
                     <thead>
@@ -368,11 +325,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($pesertaKel as $idx => $mhs)
+                        @foreach($peserta as $idx => $mhs)
                         @php
-                            $logCnt = $logbookMhs->get($mhs->mahasiswa_id, 0);
-                            $lapKey = $kel->survey_id . '_' . $mhs->mahasiswa_id;
-                            $lapInd = $laporanIndividuByMhs->get($lapKey, collect());
+                            $logCnt = $logbookPerMhs->get($mhs->mahasiswa_id, 0);
+                            $lapInd = $laporanIndividuByMhs->get($mhs->mahasiswa_id, collect());
                         @endphp
                         <tr>
                             <td style="color:var(--text-secondary);">{{ $idx + 1 }}</td>
@@ -408,11 +364,11 @@
                                     @if(!$loop->last)<br>@endif
                                     @endforeach
                                 @else
-                                    <span style="font-size:11px; color:var(--text-secondary);">—</span>
+                                    <span style="font-size:11px; color:var(--text-secondary);">&mdash;</span>
                                 @endif
                             </td>
                             <td class="center">
-                                <a href="{{ route('mahasiswa.profil', $mhs->mahasiswa_id) }}?survey_lokasi_id={{ $kel->survey_id }}"
+                                <a href="{{ route('mahasiswa.profil', $mhs->mahasiswa_id) }}?survey_lokasi_id={{ $survey->id }}"
                                    class="btn-profil">
                                     <i class="fas fa-id-card"></i> Profil
                                 </a>
@@ -426,7 +382,6 @@
             <p style="font-size:12px; color:var(--text-secondary); padding:6px 0;">Belum ada peserta di kelompok ini.</p>
             @endif
 
-            {{-- 2. Laporan Kelompok --}}
             <div class="sub-title"><i class="fas fa-file-archive"></i> Laporan Kelompok</div>
 
             @if($laporanAkhir->isNotEmpty())
@@ -461,12 +416,27 @@
                 Belum ada laporan yang diunggah koordinator untuk kelompok ini.
             </div>
             @endif
+        </div>
+    </div>
 
-            {{-- 3. Penilaian --}}
-            @if($pesertaKel->isNotEmpty())
-            <div class="sub-title"><i class="fas fa-star-half-alt"></i> Penilaian Mahasiswa</div>
+    {{-- TAB: NILAI --}}
+    <div class="kel-tab-pane" id="kel-tab-nilai">
+        <div class="card-box">
+            @if($komponenPenilaian->isNotEmpty())
+            <div class="komponen-bar">
+                <span class="komponen-label"><i class="fas fa-sliders-h" style="margin-right:5px;"></i>Komponen Penilaian</span>
+                @foreach($komponenPenilaian as $kp)
+                <span class="komponen-tag">
+                    {{ $kp->nama }} &mdash; <strong>{{ $kp->persentase }}%</strong>
+                </span>
+                @endforeach
+            </div>
+            @endif
 
-            {{-- Banner: periode ditutup --}}
+            @if($peserta->isEmpty())
+            <p style="font-size:12px; color:var(--text-secondary);">Belum ada peserta di kelompok ini untuk dinilai.</p>
+            @else
+
             @if(!$nilaiTerbuka)
             <div class="nilai-locked-banner">
                 <i class="fas fa-lock"></i>
@@ -488,9 +458,8 @@
             </div>
             @endif
 
-            {{-- Tabel nilai dinamis berdasarkan komponenPenilaian --}}
             @if($nilaiTerbuka)
-            <form method="POST" action="{{ route('dosen-pembimbing.nilai', $kegiatan->id) }}">
+            <form method="POST" action="{{ route('dosen-pembimbing.nilai', $survey->id) }}">
                 @csrf
             @endif
 
@@ -511,10 +480,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($pesertaKel as $i => $mhs)
+                        @foreach($peserta as $i => $mhs)
                         @php
-                            $mhsNilaiKompo = $nilaiKompoKel[$mhs->mahasiswa_id] ?? [];
-                            $nv     = $nilaiAkhirKel->get($mhs->mahasiswa_id);
+                            $mhsNilaiKompo = $nilaiKomponenByMhs[$mhs->mahasiswa_id] ?? [];
+                            $nv     = $nilaiAkhirByMhs->get($mhs->mahasiswa_id);
                             $naVal  = $nv->nilai_akhir ?? null;
                             $gradeStr = '-';
                             if ($naVal !== null) {
@@ -525,24 +494,20 @@
                                 }
                             }
                             $readonly = $nilaiTerbuka ? '' : 'readonly';
-                            $rowKey   = $kel->survey_id . '_' . $i;
                         @endphp
-                        <tr class="nilai-row"
-                            data-survey="{{ $kel->survey_id }}"
-                            data-mhs="{{ $mhs->mahasiswa_id }}">
+                        <tr class="nilai-row" data-mhs="{{ $mhs->mahasiswa_id }}">
                             <td>
                                 <div style="font-weight:600;font-size:12px;">{{ $mhs->nama }}</div>
                                 <div style="font-size:10px;color:var(--text-secondary);">{{ $mhs->nim }}</div>
                                 @if($nilaiTerbuka)
-                                <input type="hidden" name="nilai[{{ $rowKey }}][mahasiswa_id]"     value="{{ $mhs->mahasiswa_id }}">
-                                <input type="hidden" name="nilai[{{ $rowKey }}][survey_lokasi_id]" value="{{ $kel->survey_id }}">
+                                <input type="hidden" name="nilai[{{ $i }}][mahasiswa_id]" value="{{ $mhs->mahasiswa_id }}">
                                 @endif
                             </td>
                             @foreach($komponenPenilaian as $kp)
                             <td>
                                 <input type="number" min="0" max="100" step="0.01"
                                     @if($nilaiTerbuka)
-                                        name="nilai[{{ $rowKey }}][komponen][{{ $kp->id }}]"
+                                        name="nilai[{{ $i }}][komponen][{{ $kp->id }}]"
                                         oninput="hitungAkhir(this.closest('.nilai-row'))"
                                     @endif
                                     class="nilai-input"
@@ -563,7 +528,7 @@
                             <td>
                                 @if($nilaiTerbuka)
                                 <textarea class="catatan-input"
-                                    name="nilai[{{ $rowKey }}][catatan]"
+                                    name="nilai[{{ $i }}][catatan]"
                                     placeholder="Catatan...">{{ $nv->catatan ?? '' }}</textarea>
                                 @else
                                 <span style="font-size:11px; color:var(--text-secondary);">
@@ -579,17 +544,145 @@
 
             @if($nilaiTerbuka)
                 <button type="submit" class="btn-save-nilai">
-                    <i class="fas fa-save"></i> Simpan Nilai Kelompok {{ $kel->kelompok }}
+                    <i class="fas fa-save"></i> Simpan Nilai Kelompok {{ $survey->kelompok }}
                 </button>
             </form>
             @endif
             @endif
+        </div>
+    </div>
 
-        </div>{{-- /.kel-section-body --}}
-    </div>{{-- /.kel-section --}}
-    @endforeach
+    {{-- TAB: INFO LOKASI --}}
+    <div class="kel-tab-pane" id="kel-tab-lokasi">
+        <div class="card-box">
+            <div class="sub-title"><i class="fas fa-map-marked-alt"></i> Data Lokasi Survey</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Lokasi</div>
+                    <div class="info-value">{{ $survey->lokasi_lengkap }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Status Survey</div>
+                    <div class="info-value">
+                        @php
+                            $statusMap = [
+                                'belum_survey' => ['Belum Survey', 'no'],
+                                'sudah_survey' => ['Sudah Survey', 'mid'],
+                                'disetujui'    => ['Disetujui', 'ok'],
+                                'ditolak'      => ['Ditolak', 'no'],
+                            ];
+                            [$statusLbl, $statusClass] = $statusMap[$survey->status] ?? [$survey->status, 'mid'];
+                        @endphp
+                        <span class="status-pill {{ $statusClass }}">{{ $statusLbl }}</span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Nama Kepala Desa</div>
+                    <div class="info-value {{ $survey->nama_kades ? '' : 'muted' }}">{{ $survey->nama_kades ?? '-' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">No. HP Kepala Desa</div>
+                    <div class="info-value {{ $survey->no_hp_kades ? '' : 'muted' }}">{{ $survey->no_hp_kades ?? '-' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Pemberi Informasi</div>
+                    <div class="info-value {{ $survey->pemberi_informasi ? '' : 'muted' }}">{{ $survey->pemberi_informasi ?? '-' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Rencana Posko</div>
+                    <div class="info-value {{ $survey->rencana_posko ? '' : 'muted' }}">
+                        @php
+                            $poskoMap = ['rumah_kades' => 'Rumah Kepala Desa', 'rumah_warga' => 'Rumah Warga', 'lainnya' => 'Lainnya'];
+                        @endphp
+                        {{ $survey->rencana_posko ? ($poskoMap[$survey->rencana_posko] ?? $survey->rencana_posko) : '-' }}
+                        @if($survey->rencana_posko === 'lainnya' && $survey->rencana_posko_lainnya)
+                            &mdash; {{ $survey->rencana_posko_lainnya }}
+                        @endif
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Tim Survey</div>
+                    <div class="info-value {{ $survey->tim_anggota ? '' : 'muted' }}" style="white-space:pre-line;">{{ $survey->tim_anggota ?? '-' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Google Maps</div>
+                    <div class="info-value">
+                        @if($survey->gmaps_url)
+                        <a href="{{ $survey->gmaps_url }}" target="_blank" class="gmaps-link">
+                            <i class="fas fa-map-marker-alt"></i> Buka Lokasi
+                        </a>
+                        @else
+                        <span class="muted">-</span>
+                        @endif
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Kondisi Air</div>
+                    <div class="info-value {{ $survey->kondisi_air ? '' : 'muted' }}">{{ $survey->kondisi_air ?? '-' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Kondisi Listrik</div>
+                    <div class="info-value {{ $survey->kondisi_listrik ? '' : 'muted' }}">{{ $survey->kondisi_listrik ?? '-' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Kondisi Transportasi</div>
+                    <div class="info-value {{ $survey->kondisi_transportasi ? '' : 'muted' }}">{{ $survey->kondisi_transportasi ?? '-' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Rekomendasi Surveyor</div>
+                    <div class="info-value">
+                        @if($survey->rekomendasi === null)
+                            <span class="muted">-</span>
+                        @elseif($survey->rekomendasi)
+                            <span class="status-pill ok"><i class="fas fa-check"></i> Direkomendasikan</span>
+                        @else
+                            <span class="status-pill no"><i class="fas fa-times"></i> Tidak Direkomendasikan</span>
+                        @endif
+                    </div>
+                </div>
+                <div class="info-item info-full">
+                    <div class="info-label">Deskripsi Lokasi</div>
+                    <div class="info-value {{ $survey->deskripsi ? '' : 'muted' }}">{{ $survey->deskripsi ?? '-' }}</div>
+                </div>
+                <div class="info-item info-full">
+                    <div class="info-label">Alasan Rekomendasi</div>
+                    <div class="info-value {{ $survey->alasan_rekomendasi ? '' : 'muted' }}">{{ $survey->alasan_rekomendasi ?? '-' }}</div>
+                </div>
+            </div>
 
-    @endif
+            <div class="sub-title"><i class="fas fa-user-check"></i> Persetujuan Panitia</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Status Persetujuan</div>
+                    <div class="info-value">
+                        @if($survey->disetujui === null)
+                            <span class="status-pill mid">Belum Diproses</span>
+                        @elseif($survey->disetujui)
+                            <span class="status-pill ok"><i class="fas fa-check"></i> Disetujui</span>
+                        @else
+                            <span class="status-pill no"><i class="fas fa-times"></i> Ditolak</span>
+                        @endif
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Tanggal Survey</div>
+                    <div class="info-value {{ $survey->surveyed_at ? '' : 'muted' }}">
+                        {{ $survey->surveyed_at ? $survey->surveyed_at->translatedFormat('d F Y, H:i') : '-' }}
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Tanggal Persetujuan</div>
+                    <div class="info-value {{ $survey->approved_at ? '' : 'muted' }}">
+                        {{ $survey->approved_at ? $survey->approved_at->translatedFormat('d F Y, H:i') : '-' }}
+                    </div>
+                </div>
+                <div class="info-item info-full">
+                    <div class="info-label">Catatan Panitia</div>
+                    <div class="info-value {{ $survey->catatan_panitia ? '' : 'muted' }}">{{ $survey->catatan_panitia ?? '-' }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
 </div>
 
@@ -597,10 +690,16 @@
 
 @section('js')
 <script>
+function switchKelTab(tabName, btn) {
+    document.querySelectorAll('.kel-tab-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.kel-tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('kel-tab-' + tabName)?.classList.add('active');
+    btn.classList.add('active');
+}
+
 const gradeData = @json($gradeTable->values());
 
 function hitungAkhir(rowEl) {
-    // Ambil semua input komponen dalam row ini
     const inputs = rowEl.querySelectorAll('.nilai-input[data-komponen]');
     let totalBobot    = 0;
     let nilaiTertimbang = 0;
@@ -618,7 +717,6 @@ function hitungAkhir(rowEl) {
 
     let nilai_akhir = null;
     if (adaIsi && totalBobot > 0) {
-        // Normalisasi jika tidak semua komponen diisi
         nilai_akhir = totalBobot < 100
             ? (nilaiTertimbang / totalBobot * 100)
             : nilaiTertimbang;
