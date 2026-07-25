@@ -14,6 +14,23 @@
     .page-header-text h2 { font-size: 22px; font-weight: 700; color: var(--text-primary); margin: 0 0 3px; }
     .page-header-text p  { font-size: 13px; color: var(--text-secondary); margin: 0; }
 
+    /* ─── TABS ─── */
+    .pel-tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--gray-border); margin-bottom: 20px; flex-wrap: wrap; }
+    .pel-tab-btn {
+        display: flex; align-items: center; gap: 7px;
+        padding: 11px 18px; border: none; background: none; cursor: pointer;
+        font-size: 13px; font-weight: 600; color: var(--text-secondary); font-family: inherit;
+        border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all .15s;
+    }
+    .pel-tab-btn:hover { color: var(--maroon-main); }
+    .pel-tab-btn.active { color: var(--maroon-main); border-bottom-color: var(--maroon-main); }
+    .pel-tab-btn .tab-badge {
+        background: var(--maroon-main); color: white; font-size: 10px; font-weight: 700;
+        border-radius: 10px; padding: 1px 6px; min-width: 16px; text-align: center;
+    }
+    .pel-tab-pane { display: none; }
+    .pel-tab-pane.active { display: block; }
+
     /* ─── CARDS ─── */
     .info-card {
         background: white; border-radius: 12px;
@@ -51,12 +68,13 @@
     .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
     .info-item label { display: block; font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
     .info-item span  { font-size: 13px; font-weight: 600; color: var(--text-primary); }
-    .info-item .link-anggota {
-        font-size: 11px; font-weight: 700; color: var(--maroon-main);
+    .link-value {
         background: none; border: none; padding: 0; cursor: pointer;
-        margin-left: 8px; font-family: inherit; text-decoration: underline;
+        font-family: inherit; font-size: 13px; font-weight: 700; color: var(--maroon-main);
+        text-decoration: underline; text-align: left;
     }
-    .info-item .link-anggota:hover { color: var(--maroon-dark); }
+    .link-value:hover { color: var(--maroon-dark); }
+    .link-value + .link-value::before { content: ', '; color: var(--text-primary); text-decoration: none; font-weight: 600; }
 
     /* ─── LOGBOOK ─── */
     .form-group { display: flex; flex-direction: column; gap: 5px; }
@@ -123,6 +141,24 @@
     .nilai-item .nilai-val.dash { color: #d1d5db; }
     .nilai-catatan { padding: 12px 14px; background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.2); border-radius: 8px; font-size: 13px; color: var(--text-primary); }
 
+    /* ─── INFO LOKASI (detail fields di dalam tab, ringkas) ─── */
+    .lokasi-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px 20px; }
+    .lokasi-info-grid .info-item .info-value { font-size: 13px; color: var(--text-primary); font-weight: 500; line-height: 1.5; }
+    .lokasi-info-grid .info-item .info-value.muted { color: var(--text-secondary); font-weight: 400; }
+    .lokasi-info-full { grid-column: 1 / -1; }
+    .status-pill {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+    }
+    .status-pill.ok  { background: #d1fae5; color: #059669; }
+    .status-pill.no  { background: #fee2e2; color: #dc2626; }
+    .status-pill.mid { background: #fef3c7; color: #d97706; }
+    .gmaps-link {
+        display: inline-flex; align-items: center; gap: 6px;
+        color: var(--maroon-main); font-weight: 600; text-decoration: none; font-size: 13px;
+    }
+    .gmaps-link:hover { text-decoration: underline; }
+
     /* ─── MODAL ─── */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 16px; }
     .modal-overlay.active { display: flex; }
@@ -166,6 +202,12 @@
         flex-shrink: 0;
     }
 
+    /* Detail DPL */
+    .dpl-detail-row { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--gray-border); }
+    .dpl-detail-row:last-child { border-bottom: none; }
+    .dpl-detail-row label { flex: 0 0 110px; font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .4px; }
+    .dpl-detail-row span { font-size: 13px; color: var(--text-primary); font-weight: 500; }
+
     /* ─── BUTTONS ─── */
     .btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; border: none; transition: all 0.2s; text-decoration: none; }
     .btn-primary { background: var(--maroon-main); color: white; }
@@ -193,268 +235,160 @@
         <div class="page-header-icon"><i class="fas fa-tasks"></i></div>
         <div class="page-header-text">
             <h2>Pelaksanaan KKA</h2>
-            <p>Logbook, laporan, dan nilai selama masa pelaksanaan KKA</p>
+            <p>Logbook, laporan, nilai, dan info kelompok selama masa pelaksanaan KKA</p>
         </div>
     </div>
 
-    {{-- INFO KELOMPOK --}}
-    <div class="info-card">
-        <div class="card-header">
-            <i class="fas fa-users"></i>
-            <h3>Informasi Kelompok</h3>
-            @if($isKoordinator)
-                <span class="badge-koordinator"><i class="fas fa-crown" style="font-size:10px;"></i> Koordinator</span>
-            @endif
-        </div>
-        <div class="card-body">
-            <div class="info-grid">
-                <div class="info-item">
-                    <label>No. Kelompok</label>
-                    <span>Kelompok {{ $kelompok->kelompok }}</span>
-                </div>
-                <div class="info-item">
-                    <label>Lokasi</label>
-                    <span>
-                        {{ $kelompok->desa?->nama ?? '-' }}
-                        @if($kelompok->desa?->kecamatan)
-                            , Kec. {{ $kelompok->desa->kecamatan->nama }}
-                        @endif
-                    </span>
-                </div>
-                <div class="info-item">
-                    <label>Kegiatan</label>
-                    <span>{{ $kegiatan?->nama ?? '-' }}</span>
-                </div>
-                <div class="info-item">
-                    <label>DPL</label>
-                    <span>
-                        @forelse($kelompok->dosenPembimbing as $dpl)
-                            {{ $dpl->nama }}@if(!$loop->last), @endif
-                        @empty
-                            <span style="color:#9ca3af;">Belum ditentukan</span>
-                        @endforelse
-                    </span>
-                </div>
-                <div class="info-item">
-                    <label>Anggota</label>
-                    <span>
-                        {{ $kelompok->peserta->count() }} Mahasiswa
-                        <button class="link-anggota" onclick="openModal('modalAnggota')">
-                            <i class="fas fa-eye"></i> Lihat
-                        </button>
-                    </span>
-                </div>
-            </div>
-        </div>
+    @php
+        $defaultTab = $hasLogbook ? 'logbook' : 'laporan';
+    @endphp
+
+    {{-- TAB NAVIGATION --}}
+    <div class="pel-tabs">
+        @if($hasLogbook)
+        <button type="button" class="pel-tab-btn {{ $defaultTab === 'logbook' ? 'active' : '' }}" onclick="switchPelTab('logbook', this)">
+            <i class="fas fa-book-open"></i> Logbook
+        </button>
+        @endif
+        <button type="button" class="pel-tab-btn {{ $defaultTab === 'laporan' ? 'active' : '' }}" onclick="switchPelTab('laporan', this)">
+            <i class="fas fa-file-alt"></i> Laporan
+        </button>
+        <button type="button" class="pel-tab-btn" onclick="switchPelTab('nilai', this)">
+            <i class="fas fa-star"></i> Nilai
+        </button>
+        <button type="button" class="pel-tab-btn" onclick="switchPelTab('lokasi', this)">
+            <i class="fas fa-map-marked-alt"></i> Info Lokasi
+        </button>
     </div>
 
-    {{-- ─── LOGBOOK ─── --}}
+    {{-- ═══ TAB: LOGBOOK ═══ --}}
     @if($hasLogbook)
-    <div class="info-card">
-        <div class="card-header">
-            <i class="fas fa-book-open"></i>
-            <h3>Logbook Kegiatan</h3>
-            @if(!$sudahDinilai)
-            <button class="btn-header" onclick="openModal('modalTambahLogbook')">
-                <i class="fas fa-plus"></i> Tambah
-            </button>
-            @else
-            <span style="margin-left:auto; font-size:11px; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.25); border-radius:20px; padding:3px 10px;">
-                <i class="fas fa-lock"></i> Sudah dinilai
-            </span>
-            @endif
-        </div>
-        <div class="card-body">
-            @if($logbooks->isNotEmpty())
-            <div style="overflow-x:auto;">
-                <table class="logbook-table">
-                    <thead>
-                        <tr>
-                            <th style="width:120px;">Tanggal</th>
-                            <th>Kegiatan</th>
-                            <th>Lokasi</th>
-                            @if(!$sudahDinilai)
-                            <th style="width:100px; text-align:center;">Aksi</th>
-                            @endif
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($logbooks as $lb)
-                        <tr>
-                            <td class="td-date">{{ $lb->tanggal->format('d M Y') }}</td>
-                            <td style="white-space: pre-wrap;">{{ $lb->kegiatan_dilakukan }}</td>
-                            <td>{{ $lb->lokasi ?? '-' }}</td>
-                            @if(!$sudahDinilai)
-                            <td class="td-action" style="text-align:center;">
-                                <button onclick="openEditLogbook({{ $lb->id }}, '{{ $lb->tanggal->format('Y-m-d') }}', {{ json_encode($lb->kegiatan_dilakukan) }}, {{ json_encode($lb->lokasi ?? '') }})"
-                                    class="btn btn-secondary btn-icon btn-sm" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <form method="POST" action="{{ route('mahasiswa.pelaksanaan.logbook.destroy', $lb->id) }}" style="display:inline;"
-                                    onsubmit="return confirm('Hapus logbook ini?')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-icon btn-sm" title="Hapus">
-                                        <i class="fas fa-trash"></i>
+    <div class="pel-tab-pane {{ $defaultTab === 'logbook' ? 'active' : '' }}" id="pel-tab-logbook">
+        <div class="info-card">
+            <div class="card-header">
+                <i class="fas fa-book-open"></i>
+                <h3>Logbook Kegiatan</h3>
+                @if(!$sudahDinilai)
+                <button class="btn-header" onclick="openModal('modalTambahLogbook')">
+                    <i class="fas fa-plus"></i> Tambah
+                </button>
+                @else
+                <span style="margin-left:auto; font-size:11px; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.25); border-radius:20px; padding:3px 10px;">
+                    <i class="fas fa-lock"></i> Sudah dinilai
+                </span>
+                @endif
+            </div>
+            <div class="card-body">
+                @if($logbooks->isNotEmpty())
+                <div style="overflow-x:auto;">
+                    <table class="logbook-table">
+                        <thead>
+                            <tr>
+                                <th style="width:120px;">Tanggal</th>
+                                <th>Kegiatan</th>
+                                <th>Lokasi</th>
+                                @if(!$sudahDinilai)
+                                <th style="width:100px; text-align:center;">Aksi</th>
+                                @endif
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($logbooks as $lb)
+                            <tr>
+                                <td class="td-date">{{ $lb->tanggal->format('d M Y') }}</td>
+                                <td style="white-space: pre-wrap;">{{ $lb->kegiatan_dilakukan }}</td>
+                                <td>{{ $lb->lokasi ?? '-' }}</td>
+                                @if(!$sudahDinilai)
+                                <td class="td-action" style="text-align:center;">
+                                    <button onclick="openEditLogbook({{ $lb->id }}, '{{ $lb->tanggal->format('Y-m-d') }}', {{ json_encode($lb->kegiatan_dilakukan) }}, {{ json_encode($lb->lokasi ?? '') }})"
+                                        class="btn btn-secondary btn-icon btn-sm" title="Edit">
+                                        <i class="fas fa-edit"></i>
                                     </button>
-                                </form>
-                            </td>
-                            @endif
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                                    <form method="POST" action="{{ route('mahasiswa.pelaksanaan.logbook.destroy', $lb->id) }}" style="display:inline;"
+                                        onsubmit="return confirm('Hapus logbook ini?')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="btn btn-danger btn-icon btn-sm" title="Hapus">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                                @endif
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @else
+                <div class="empty-state">
+                    <i class="fas fa-book"></i>
+                    <span>Belum ada logbook. Klik tombol <strong>Tambah</strong> untuk mencatat kegiatan.</span>
+                </div>
+                @endif
             </div>
-            @else
-            <div class="empty-state">
-                <i class="fas fa-book"></i>
-                <span>Belum ada logbook. Klik tombol <strong>Tambah</strong> untuk mencatat kegiatan.</span>
-            </div>
-            @endif
         </div>
     </div>
     @endif
 
-    {{-- ─── LAPORAN INDIVIDU (dinamis per dokumen) ─── --}}
-    @foreach($dokumenIndividu as $dok)
-    @php $upload = $uploadIndividu->get($dok->id); @endphp
-    <div class="info-card">
-        <div class="card-header">
-            <i class="fas fa-file-alt"></i>
-            <h3>{{ $dok->nama }}</h3>
-            @if($sudahDinilai)
-                <span style="margin-left:auto; font-size:11px; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.25); border-radius:20px; padding:3px 10px;">
-                    <i class="fas fa-lock"></i> Sudah dinilai
-                </span>
-            @elseif($dok->is_wajib)
-                <span class="badge-wajib" style="margin-left:auto;">Wajib</span>
-            @endif
-        </div>
-        <div class="card-body">
-            @if($upload)
-                <div class="file-info" style="margin-bottom: 14px;">
-                    <div class="file-info-icon"><i class="fas fa-file-pdf"></i></div>
-                    <div class="file-info-text">
-                        <div class="file-name">{{ $upload->file_name }}</div>
-                        <div class="file-size">{{ number_format($upload->file_size / 1024, 1) }} KB
-                            &mdash; Diunggah {{ $upload->created_at->format('d M Y H:i') }}
-                        </div>
-                        @if($upload->keterangan)
-                        <div style="font-size:12px; color:var(--text-secondary); margin-top:3px;">{{ $upload->keterangan }}</div>
-                        @endif
-                    </div>
-                    <div class="file-info-actions">
-                        <a href="{{ Storage::url($upload->file_path) }}" target="_blank"
-                           class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i> Lihat</a>
-                        @if(!$sudahDinilai)
-                        <form method="POST" action="{{ route('mahasiswa.pelaksanaan.laporan-individu.hapus', $dok->id) }}"
-                            onsubmit="return confirm('Hapus laporan ini?')">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
-                        </form>
-                        @endif
-                    </div>
-                </div>
-                @if(!$sudahDinilai)
-                <div class="section-hint">
-                    <i class="fas fa-info-circle"></i>
-                    Untuk mengganti laporan, hapus file lama terlebih dahulu lalu upload yang baru.
-                </div>
-                @endif
-            @else
-                @if(!$sudahDinilai)
-                <form method="POST" action="{{ route('mahasiswa.pelaksanaan.laporan-individu.upload', $dok->id) }}" enctype="multipart/form-data">
-                    @csrf
-                    <div style="margin-bottom:14px;">
-                        <label class="upload-zone" for="file-ind-{{ $dok->id }}">
-                            <input type="file" id="file-ind-{{ $dok->id }}" name="file" accept=".pdf"
-                                   onchange="previewFile(this, 'file-ind-name-{{ $dok->id }}')">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                            <span id="file-ind-name-{{ $dok->id }}">Klik untuk pilih file PDF</span>
-                            <small>Maks. 10 MB, format PDF</small>
-                        </label>
-                    </div>
-                    <div class="form-group" style="margin-bottom:14px;">
-                        <label>Keterangan (opsional)</label>
-                        <input type="text" name="keterangan" placeholder="Tambahkan keterangan..." maxlength="255">
-                    </div>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-upload"></i> Upload {{ $dok->nama }}</button>
-                </form>
-                @else
-                <div class="empty-state">
-                    <i class="fas fa-file-alt"></i>
-                    <span>{{ $dok->nama }} belum diunggah.</span>
-                </div>
-                @endif
-            @endif
-        </div>
-    </div>
-    @endforeach
+    {{-- ═══ TAB: LAPORAN ═══ --}}
+    <div class="pel-tab-pane {{ $defaultTab === 'laporan' ? 'active' : '' }}" id="pel-tab-laporan">
 
-    {{-- ─── LAPORAN AKHIR KELOMPOK (dinamis per dokumen) ─── --}}
-    @foreach($dokumenKelompok as $dok)
-    @php $upload = $uploadKelompok->get($dok->id); @endphp
-    <div class="info-card">
-        <div class="card-header">
-            <i class="fas fa-file-contract"></i>
-            <h3>{{ $dok->nama }}</h3>
-            @if($sudahDinilai)
-                <span style="margin-left:auto; font-size:11px; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.25); border-radius:20px; padding:3px 10px;">
-                    <i class="fas fa-lock"></i> Sudah dinilai
-                </span>
-            @else
-                @if($dok->is_wajib && !$isKoordinator)
+        {{-- Laporan Individu (dinamis per dokumen, jika aktif diset admin) --}}
+        @foreach($dokumenIndividu as $dok)
+        @php $upload = $uploadIndividu->get($dok->id); @endphp
+        <div class="info-card">
+            <div class="card-header">
+                <i class="fas fa-file-alt"></i>
+                <h3>{{ $dok->nama }}</h3>
+                @if($sudahDinilai)
+                    <span style="margin-left:auto; font-size:11px; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.25); border-radius:20px; padding:3px 10px;">
+                        <i class="fas fa-lock"></i> Sudah dinilai
+                    </span>
+                @elseif($dok->is_wajib)
                     <span class="badge-wajib" style="margin-left:auto;">Wajib</span>
                 @endif
-                @if($isKoordinator)
-                    <span class="badge-koordinator" style="margin-left:auto;"><i class="fas fa-crown" style="font-size:10px;"></i> Koordinator</span>
-                    @if($dok->is_wajib)
-                        <span class="badge-wajib">Wajib</span>
-                    @endif
-                @endif
-            @endif
-        </div>
-        <div class="card-body">
-            @if($upload)
-                <div class="file-info" style="margin-bottom:14px;">
-                    <div class="file-info-icon"><i class="fas fa-file-pdf"></i></div>
-                    <div class="file-info-text">
-                        <div class="file-name">{{ $upload->file_name }}</div>
-                        <div class="file-size">{{ number_format($upload->file_size / 1024, 1) }} KB
-                            &mdash; Diunggah {{ $upload->created_at->format('d M Y H:i') }}
+            </div>
+            <div class="card-body">
+                @if($upload)
+                    <div class="file-info" style="margin-bottom: 14px;">
+                        <div class="file-info-icon"><i class="fas fa-file-pdf"></i></div>
+                        <div class="file-info-text">
+                            <div class="file-name">{{ $upload->file_name }}</div>
+                            <div class="file-size">{{ number_format($upload->file_size / 1024, 1) }} KB
+                                &mdash; Diunggah {{ $upload->created_at->format('d M Y H:i') }}
+                            </div>
+                            @if($upload->keterangan)
+                            <div style="font-size:12px; color:var(--text-secondary); margin-top:3px;">{{ $upload->keterangan }}</div>
+                            @endif
                         </div>
-                        @if($upload->keterangan)
-                        <div style="font-size:12px; color:var(--text-secondary); margin-top:3px;">{{ $upload->keterangan }}</div>
-                        @endif
+                        <div class="file-info-actions">
+                            <a href="{{ Storage::url($upload->file_path) }}" target="_blank"
+                               class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i> Lihat</a>
+                            @if(!$sudahDinilai)
+                            <form method="POST" action="{{ route('mahasiswa.pelaksanaan.laporan-individu.hapus', $dok->id) }}"
+                                onsubmit="return confirm('Hapus laporan ini?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                            </form>
+                            @endif
+                        </div>
                     </div>
-                    <div class="file-info-actions">
-                        <a href="{{ Storage::url($upload->file_path) }}" target="_blank"
-                           class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i> Lihat</a>
-                        @if($isKoordinator && !$sudahDinilai)
-                        <form method="POST" action="{{ route('mahasiswa.pelaksanaan.laporan-akhir.hapus', $dok->id) }}"
-                            onsubmit="return confirm('Hapus laporan ini?')">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
-                        </form>
-                        @endif
+                    @if(!$sudahDinilai)
+                    <div class="section-hint">
+                        <i class="fas fa-info-circle"></i>
+                        Untuk mengganti laporan, hapus file lama terlebih dahulu lalu upload yang baru.
                     </div>
-                </div>
-                @if($isKoordinator && !$sudahDinilai)
-                <div class="section-hint">
-                    <i class="fas fa-info-circle"></i>
-                    Untuk mengganti laporan, hapus file lama terlebih dahulu lalu upload yang baru.
-                </div>
-                @endif
-            @else
-                @if($isKoordinator && !$sudahDinilai)
-                    <form method="POST" action="{{ route('mahasiswa.pelaksanaan.laporan-akhir.upload', $dok->id) }}" enctype="multipart/form-data">
+                    @endif
+                @else
+                    @if(!$sudahDinilai)
+                    <form method="POST" action="{{ route('mahasiswa.pelaksanaan.laporan-individu.upload', $dok->id) }}" enctype="multipart/form-data">
                         @csrf
                         <div style="margin-bottom:14px;">
-                            <label class="upload-zone" for="file-kel-{{ $dok->id }}">
-                                <input type="file" id="file-kel-{{ $dok->id }}" name="file" accept=".pdf"
-                                       onchange="previewFile(this, 'file-kel-name-{{ $dok->id }}')">
+                            <label class="upload-zone" for="file-ind-{{ $dok->id }}">
+                                <input type="file" id="file-ind-{{ $dok->id }}" name="file" accept=".pdf"
+                                       onchange="previewFile(this, 'file-ind-name-{{ $dok->id }}')">
                                 <i class="fas fa-cloud-upload-alt"></i>
-                                <span id="file-kel-name-{{ $dok->id }}">Klik untuk pilih file PDF</span>
-                                <small>Maks. 20 MB, format PDF</small>
+                                <span id="file-ind-name-{{ $dok->id }}">Klik untuk pilih file PDF</span>
+                                <small>Maks. 10 MB, format PDF</small>
                             </label>
                         </div>
                         <div class="form-group" style="margin-bottom:14px;">
@@ -463,74 +397,226 @@
                         </div>
                         <button type="submit" class="btn btn-primary"><i class="fas fa-upload"></i> Upload {{ $dok->nama }}</button>
                     </form>
-                @else
+                    @else
                     <div class="empty-state">
-                        <i class="fas fa-file-contract"></i>
-                        <span>
-                            @if($sudahDinilai)
-                                {{ $dok->nama }} belum diunggah.
-                            @else
-                                {{ $dok->nama }} belum diunggah oleh koordinator kelompok.
-                            @endif
-                        </span>
+                        <i class="fas fa-file-alt"></i>
+                        <span>{{ $dok->nama }} belum diunggah.</span>
                     </div>
+                    @endif
                 @endif
-            @endif
+            </div>
         </div>
-    </div>
-    @endforeach
+        @endforeach
 
-    {{-- ─── NILAI ─── --}}
-    <div class="info-card">
-        <div class="card-header">
-            <i class="fas fa-star"></i>
-            <h3>Nilai Akhir</h3>
+        {{-- Laporan Akhir Kelompok (dinamis per dokumen, hanya bisa diupload koordinator) --}}
+        @foreach($dokumenKelompok as $dok)
+        @php $upload = $uploadKelompok->get($dok->id); @endphp
+        <div class="info-card">
+            <div class="card-header">
+                <i class="fas fa-file-contract"></i>
+                <h3>{{ $dok->nama }}</h3>
+                @if($sudahDinilai)
+                    <span style="margin-left:auto; font-size:11px; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.25); border-radius:20px; padding:3px 10px;">
+                        <i class="fas fa-lock"></i> Sudah dinilai
+                    </span>
+                @else
+                    @if($dok->is_wajib && !$isKoordinator)
+                        <span class="badge-wajib" style="margin-left:auto;">Wajib</span>
+                    @endif
+                    @if($isKoordinator)
+                        <span class="badge-koordinator" style="margin-left:auto;"><i class="fas fa-crown" style="font-size:10px;"></i> Koordinator</span>
+                        @if($dok->is_wajib)
+                            <span class="badge-wajib">Wajib</span>
+                        @endif
+                    @endif
+                @endif
+            </div>
+            <div class="card-body">
+                @if($upload)
+                    <div class="file-info" style="margin-bottom:14px;">
+                        <div class="file-info-icon"><i class="fas fa-file-pdf"></i></div>
+                        <div class="file-info-text">
+                            <div class="file-name">{{ $upload->file_name }}</div>
+                            <div class="file-size">{{ number_format($upload->file_size / 1024, 1) }} KB
+                                &mdash; Diunggah {{ $upload->created_at->format('d M Y H:i') }}
+                            </div>
+                            @if($upload->keterangan)
+                            <div style="font-size:12px; color:var(--text-secondary); margin-top:3px;">{{ $upload->keterangan }}</div>
+                            @endif
+                        </div>
+                        <div class="file-info-actions">
+                            <a href="{{ Storage::url($upload->file_path) }}" target="_blank"
+                               class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i> Lihat</a>
+                            @if($isKoordinator && !$sudahDinilai)
+                            <form method="POST" action="{{ route('mahasiswa.pelaksanaan.laporan-akhir.hapus', $dok->id) }}"
+                                onsubmit="return confirm('Hapus laporan ini?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                            </form>
+                            @endif
+                        </div>
+                    </div>
+                    @if($isKoordinator && !$sudahDinilai)
+                    <div class="section-hint">
+                        <i class="fas fa-info-circle"></i>
+                        Untuk mengganti laporan, hapus file lama terlebih dahulu lalu upload yang baru.
+                    </div>
+                    @endif
+                @else
+                    @if($isKoordinator && !$sudahDinilai)
+                        <form method="POST" action="{{ route('mahasiswa.pelaksanaan.laporan-akhir.upload', $dok->id) }}" enctype="multipart/form-data">
+                            @csrf
+                            <div style="margin-bottom:14px;">
+                                <label class="upload-zone" for="file-kel-{{ $dok->id }}">
+                                    <input type="file" id="file-kel-{{ $dok->id }}" name="file" accept=".pdf"
+                                           onchange="previewFile(this, 'file-kel-name-{{ $dok->id }}')">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span id="file-kel-name-{{ $dok->id }}">Klik untuk pilih file PDF</span>
+                                    <small>Maks. 20 MB, format PDF</small>
+                                </label>
+                            </div>
+                            <div class="form-group" style="margin-bottom:14px;">
+                                <label>Keterangan (opsional)</label>
+                                <input type="text" name="keterangan" placeholder="Tambahkan keterangan..." maxlength="255">
+                            </div>
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-upload"></i> Upload {{ $dok->nama }}</button>
+                        </form>
+                    @else
+                        <div class="empty-state">
+                            <i class="fas fa-file-contract"></i>
+                            <span>
+                                @if($sudahDinilai)
+                                    {{ $dok->nama }} belum diunggah.
+                                @else
+                                    {{ $dok->nama }} belum diunggah oleh koordinator kelompok.
+                                @endif
+                            </span>
+                        </div>
+                    @endif
+                @endif
+            </div>
         </div>
-        <div class="card-body">
-            @if($nilai)
-                @php
-                    $naVal    = $nilai->nilai_akhir;
-                    $gradeStr = null;
-                    if ($naVal !== null) {
-                        foreach ($gradeTable as $g) {
-                            if ($naVal >= $g->nilai_min && $naVal <= $g->nilai_max) {
-                                $gradeStr = $g->grade;
-                                break;
+        @endforeach
+
+        @if($dokumenIndividu->isEmpty() && $dokumenKelompok->isEmpty())
+        <div class="info-card">
+            <div class="card-body">
+                <div class="empty-state">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Belum ada jenis laporan yang diaktifkan untuk kegiatan ini.</span>
+                </div>
+            </div>
+        </div>
+        @endif
+    </div>
+
+    {{-- ═══ TAB: NILAI ═══ --}}
+    <div class="pel-tab-pane" id="pel-tab-nilai">
+        <div class="info-card">
+            <div class="card-header">
+                <i class="fas fa-star"></i>
+                <h3>Nilai Akhir</h3>
+            </div>
+            <div class="card-body">
+                @if($nilai)
+                    @php
+                        $naVal    = $nilai->nilai_akhir;
+                        $gradeStr = null;
+                        if ($naVal !== null) {
+                            foreach ($gradeTable as $g) {
+                                if ($naVal >= $g->nilai_min && $naVal <= $g->nilai_max) {
+                                    $gradeStr = $g->grade;
+                                    break;
+                                }
                             }
                         }
-                    }
-                @endphp
-                <div class="nilai-grid" style="max-width:320px;">
-                    <div class="nilai-item">
-                        <label>Nilai Akhir</label>
-                        <div class="nilai-val {{ $naVal === null ? 'dash' : '' }}">
-                            {{ $naVal !== null ? number_format($naVal, 1) : '-' }}
+                    @endphp
+                    <div class="nilai-grid" style="max-width:320px;">
+                        <div class="nilai-item">
+                            <label>Nilai Akhir</label>
+                            <div class="nilai-val {{ $naVal === null ? 'dash' : '' }}">
+                                {{ $naVal !== null ? number_format($naVal, 1) : '-' }}
+                            </div>
+                        </div>
+                        <div class="nilai-item">
+                            <label>Grade</label>
+                            <div class="nilai-val grade {{ $gradeStr === null ? 'dash' : '' }}">
+                                {{ $gradeStr ?? '-' }}
+                            </div>
                         </div>
                     </div>
-                    <div class="nilai-item">
-                        <label>Grade</label>
-                        <div class="nilai-val grade {{ $gradeStr === null ? 'dash' : '' }}">
-                            {{ $gradeStr ?? '-' }}
-                        </div>
+                    @if($nilai->dpl)
+                    <div style="font-size:12px; color:var(--text-secondary); margin-bottom:10px;">
+                        Dinilai oleh: <strong>{{ $nilai->dpl->nama }}</strong>
+                    </div>
+                    @endif
+                    @if($nilai->catatan)
+                    <div class="nilai-catatan">
+                        <strong style="font-size:12px;">Catatan DPL:</strong><br>
+                        {{ $nilai->catatan }}
+                    </div>
+                    @endif
+                @else
+                    <div class="empty-state">
+                        <i class="fas fa-star"></i>
+                        <span>Nilai belum diberikan oleh DPL.</span>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    {{-- ═══ TAB: INFO LOKASI (info kelompok) ═══ --}}
+    <div class="pel-tab-pane" id="pel-tab-lokasi">
+        <div class="info-card">
+            <div class="card-header">
+                <i class="fas fa-users"></i>
+                <h3>Informasi Kelompok</h3>
+                @if($isKoordinator)
+                    <span class="badge-koordinator"><i class="fas fa-crown" style="font-size:10px;"></i> Koordinator</span>
+                @endif
+            </div>
+            <div class="card-body">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>No. Kelompok</label>
+                        <span>Kelompok {{ $kelompok->kelompok }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Lokasi</label>
+                        <span>
+                            <button type="button" class="link-value" onclick="openModal('modalDetailLokasi')">
+                                {{ $kelompok->desa?->nama ?? '-' }}
+                                @if($kelompok->desa?->kecamatan)
+                                    , Kec. {{ $kelompok->desa->kecamatan->nama }}
+                                @endif
+                            </button>
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <label>Kegiatan</label>
+                        <span>{{ $kegiatan?->nama ?? '-' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>DPL</label>
+                        <span>
+                            @forelse($kelompok->dosenPembimbing as $dpl)
+                                <button type="button" class="link-value" onclick="openDetailDpl({{ $dpl->id }}, {{ json_encode($dpl->nama) }}, {{ json_encode($dpl->nip) }}, {{ json_encode($dpl->email) }}, {{ json_encode($dpl->no_hp) }})">{{ $dpl->nama }}</button>
+                            @empty
+                                <span style="color:#9ca3af;">Belum ditentukan</span>
+                            @endforelse
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <label>Anggota</label>
+                        <span>
+                            <button type="button" class="link-value" onclick="openModal('modalAnggota')">
+                                {{ $kelompok->peserta->count() }} Mahasiswa
+                            </button>
+                        </span>
                     </div>
                 </div>
-                @if($nilai->dpl)
-                <div style="font-size:12px; color:var(--text-secondary); margin-bottom:10px;">
-                    Dinilai oleh: <strong>{{ $nilai->dpl->nama }}</strong>
-                </div>
-                @endif
-                @if($nilai->catatan)
-                <div class="nilai-catatan">
-                    <strong style="font-size:12px;">Catatan DPL:</strong><br>
-                    {{ $nilai->catatan }}
-                </div>
-                @endif
-            @else
-                <div class="empty-state">
-                    <i class="fas fa-star"></i>
-                    <span>Nilai belum diberikan oleh DPL.</span>
-                </div>
-            @endif
+            </div>
         </div>
     </div>
 
@@ -647,16 +733,150 @@
         </div>
     </div>
 </div>
+
+{{-- ═══════════════════════════════════════════════════════════
+     MODAL: DETAIL LOKASI
+════════════════════════════════════════════════════════════ --}}
+<div class="modal-overlay" id="modalDetailLokasi">
+    <div class="modal-box modal-lg">
+        <div class="modal-header">
+            <i class="fas fa-map-marked-alt"></i>
+            <h4>Detail Lokasi Kelompok {{ $kelompok->kelompok }}</h4>
+            <button class="modal-close" onclick="closeModal('modalDetailLokasi')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="lokasi-info-grid">
+                <div class="info-item lokasi-info-full">
+                    <label>Lokasi</label>
+                    <div class="info-value">{{ $kelompok->lokasi_lengkap }}</div>
+                </div>
+                <div class="info-item">
+                    <label>Status Survey</label>
+                    <div class="info-value">
+                        @php
+                            $statusMap = [
+                                'belum_survey' => ['Belum Survey', 'no'],
+                                'sudah_survey' => ['Sudah Survey', 'mid'],
+                                'disetujui'    => ['Disetujui', 'ok'],
+                                'ditolak'      => ['Ditolak', 'no'],
+                            ];
+                            [$statusLbl, $statusClass] = $statusMap[$kelompok->status] ?? [$kelompok->status, 'mid'];
+                        @endphp
+                        <span class="status-pill {{ $statusClass }}">{{ $statusLbl }}</span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <label>Nama Kepala Desa</label>
+                    <div class="info-value {{ $kelompok->nama_kades ? '' : 'muted' }}">{{ $kelompok->nama_kades ?? '-' }}</div>
+                </div>
+                <div class="info-item">
+                    <label>No. HP Kepala Desa</label>
+                    <div class="info-value {{ $kelompok->no_hp_kades ? '' : 'muted' }}">{{ $kelompok->no_hp_kades ?? '-' }}</div>
+                </div>
+                <div class="info-item">
+                    <label>Rencana Posko</label>
+                    <div class="info-value {{ $kelompok->rencana_posko ? '' : 'muted' }}">
+                        @php $poskoMap = ['rumah_kades' => 'Rumah Kepala Desa', 'rumah_warga' => 'Rumah Warga', 'lainnya' => 'Lainnya']; @endphp
+                        {{ $kelompok->rencana_posko ? ($poskoMap[$kelompok->rencana_posko] ?? $kelompok->rencana_posko) : '-' }}
+                        @if($kelompok->rencana_posko === 'lainnya' && $kelompok->rencana_posko_lainnya)
+                            &mdash; {{ $kelompok->rencana_posko_lainnya }}
+                        @endif
+                    </div>
+                </div>
+                <div class="info-item">
+                    <label>Google Maps</label>
+                    <div class="info-value">
+                        @if($kelompok->gmaps_url)
+                        <a href="{{ $kelompok->gmaps_url }}" target="_blank" class="gmaps-link">
+                            <i class="fas fa-map-marker-alt"></i> Buka Lokasi
+                        </a>
+                        @else
+                        <span class="muted">-</span>
+                        @endif
+                    </div>
+                </div>
+                <div class="info-item">
+                    <label>Kondisi Air</label>
+                    <div class="info-value {{ $kelompok->kondisi_air ? '' : 'muted' }}">{{ $kelompok->kondisi_air ?? '-' }}</div>
+                </div>
+                <div class="info-item">
+                    <label>Kondisi Listrik</label>
+                    <div class="info-value {{ $kelompok->kondisi_listrik ? '' : 'muted' }}">{{ $kelompok->kondisi_listrik ?? '-' }}</div>
+                </div>
+                <div class="info-item">
+                    <label>Kondisi Transportasi</label>
+                    <div class="info-value {{ $kelompok->kondisi_transportasi ? '' : 'muted' }}">{{ $kelompok->kondisi_transportasi ?? '-' }}</div>
+                </div>
+                <div class="info-item lokasi-info-full">
+                    <label>Deskripsi Lokasi</label>
+                    <div class="info-value {{ $kelompok->deskripsi ? '' : 'muted' }}">{{ $kelompok->deskripsi ?? '-' }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('modalDetailLokasi')">Tutup</button>
+        </div>
+    </div>
+</div>
+
+{{-- ═══════════════════════════════════════════════════════════
+     MODAL: DETAIL DPL (diisi dinamis via JS)
+════════════════════════════════════════════════════════════ --}}
+<div class="modal-overlay" id="modalDetailDpl">
+    <div class="modal-box">
+        <div class="modal-header">
+            <i class="fas fa-chalkboard-teacher"></i>
+            <h4>Detail Dosen Pembimbing</h4>
+            <button class="modal-close" onclick="closeModal('modalDetailDpl')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="dpl-detail-row">
+                <label>Nama</label>
+                <span id="dplDetailNama">-</span>
+            </div>
+            <div class="dpl-detail-row">
+                <label>NIP</label>
+                <span id="dplDetailNip">-</span>
+            </div>
+            <div class="dpl-detail-row">
+                <label>Email</label>
+                <span id="dplDetailEmail">-</span>
+            </div>
+            <div class="dpl-detail-row">
+                <label>No. HP</label>
+                <span id="dplDetailHp">-</span>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('modalDetailDpl')">Tutup</button>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('js')
 <script>
+    function switchPelTab(tabName, btn) {
+        document.querySelectorAll('.pel-tab-pane').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.pel-tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('pel-tab-' + tabName)?.classList.add('active');
+        btn.classList.add('active');
+    }
+
     function openModal(id) {
         document.getElementById(id).classList.add('active');
     }
 
     function closeModal(id) {
         document.getElementById(id).classList.remove('active');
+    }
+
+    function openDetailDpl(id, nama, nip, email, noHp) {
+        document.getElementById('dplDetailNama').textContent  = nama || '-';
+        document.getElementById('dplDetailNip').textContent   = nip || '-';
+        document.getElementById('dplDetailEmail').textContent = email || '-';
+        document.getElementById('dplDetailHp').textContent    = noHp || '-';
+        openModal('modalDetailDpl');
     }
 
     function openEditLogbook(id, tanggal, kegiatan, lokasi) {

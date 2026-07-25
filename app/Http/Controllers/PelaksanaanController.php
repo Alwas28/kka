@@ -22,7 +22,7 @@ class PelaksanaanController extends Controller
     {
         return $mahasiswa->kelompok()
             ->with([
-                'desa.kecamatan.kabupaten',
+                'desa.kecamatan.kabupaten.provinsi',
                 'kegiatan.dokumen',
                 'dosenPembimbing',
                 'peserta.programStudi',
