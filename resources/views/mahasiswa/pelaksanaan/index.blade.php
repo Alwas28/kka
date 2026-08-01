@@ -224,6 +224,28 @@
         font-size: 12px; color: var(--text-secondary); margin-top: 10px;
     }
     .section-hint i { flex-shrink: 0; }
+
+    /* ─── PERIODE LAPORAN BANNER ─── */
+    .periode-banner {
+        display: flex; align-items: center; gap: 12px;
+        border-radius: 10px; padding: 13px 16px; margin-bottom: 16px;
+    }
+    .periode-banner i { font-size: 20px; flex-shrink: 0; }
+    .periode-banner .periode-title { font-size: 13px; font-weight: 700; }
+    .periode-banner .periode-sub   { font-size: 11px; margin-top: 2px; }
+    .periode-banner.belum { background: #fef3c7; border: 1px solid #fde68a; }
+    .periode-banner.belum i { color: #d97706; }
+    .periode-banner.belum .periode-title { color: #92400e; }
+    .periode-banner.belum .periode-sub   { color: #b45309; }
+    .periode-banner.tutup { background: #fef2f2; border: 1px solid #fecaca; }
+    .periode-banner.tutup i { color: #dc2626; }
+    .periode-banner.tutup .periode-title { color: #991b1b; }
+    .periode-banner.tutup .periode-sub   { color: #b91c1c; }
+    .periode-banner.buka { background: #eff6ff; border: 1px solid #bfdbfe; }
+    .periode-banner.buka i { color: #2563eb; }
+    .periode-banner.buka .periode-title { color: #1e40af; }
+    .periode-banner.buka .periode-sub   { color: #1d4ed8; }
+    .periode-banner.buka .periode-sub strong { font-family: 'Courier New', monospace; }
 </style>
 @endsection
 
@@ -332,6 +354,48 @@
     {{-- ═══ TAB: LAPORAN ═══ --}}
     <div class="pel-tab-pane {{ $defaultTab === 'laporan' ? 'active' : '' }}" id="pel-tab-laporan">
 
+        @php $canUploadLaporan = $statusLaporan === 'buka' && !$sudahDinilai; @endphp
+
+        {{-- Banner status periode upload laporan --}}
+        @if($statusLaporan === 'belum')
+        <div class="periode-banner belum">
+            <i class="fas fa-hourglass-half"></i>
+            <div>
+                <div class="periode-title">Periode Upload Laporan Belum Dibuka</div>
+                <div class="periode-sub">
+                    @if($tahapanLaporan?->mulai)
+                        Upload laporan akan dibuka pada <strong>{{ \Carbon\Carbon::parse($tahapanLaporan->mulai)->translatedFormat('d F Y') }}</strong>.
+                    @else
+                        Jadwal pembukaan belum diatur oleh panitia.
+                    @endif
+                </div>
+            </div>
+        </div>
+        @elseif($statusLaporan === 'tutup')
+        <div class="periode-banner tutup">
+            <i class="fas fa-lock"></i>
+            <div>
+                <div class="periode-title">Periode Upload Laporan Telah Berakhir</div>
+                <div class="periode-sub">
+                    Batas akhir upload: <strong>{{ \Carbon\Carbon::parse($tahapanLaporan->selesai)->translatedFormat('d F Y') }}</strong>.
+                    Laporan tidak dapat diupload atau diubah lagi.
+                </div>
+            </div>
+        </div>
+        @elseif($statusLaporan === 'buka' && $tahapanLaporan?->selesai && !$sudahDinilai)
+        <div class="periode-banner buka" id="countdownBanner"
+             data-deadline="{{ \Carbon\Carbon::parse($tahapanLaporan->selesai)->endOfDay()->toIso8601String() }}">
+            <i class="fas fa-clock"></i>
+            <div>
+                <div class="periode-title">Batas Upload Laporan</div>
+                <div class="periode-sub">
+                    Ditutup pada <strong>{{ \Carbon\Carbon::parse($tahapanLaporan->selesai)->translatedFormat('d F Y') }}</strong>
+                    &mdash; <span id="countdownText">menghitung...</span>
+                </div>
+            </div>
+        </div>
+        @endif
+
         {{-- Laporan Individu (dinamis per dokumen, jika aktif diset admin) --}}
         @foreach($dokumenIndividu as $dok)
         @php $upload = $uploadIndividu->get($dok->id); @endphp
@@ -363,7 +427,7 @@
                         <div class="file-info-actions">
                             <a href="{{ Storage::url($upload->file_path) }}" target="_blank"
                                class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i> Lihat</a>
-                            @if(!$sudahDinilai)
+                            @if($canUploadLaporan)
                             <form method="POST" action="{{ route('mahasiswa.pelaksanaan.laporan-individu.hapus', $dok->id) }}"
                                 onsubmit="return confirm('Hapus laporan ini?')">
                                 @csrf @method('DELETE')
@@ -372,14 +436,13 @@
                             @endif
                         </div>
                     </div>
-                    @if(!$sudahDinilai)
+                    @if($canUploadLaporan)
                     <div class="section-hint">
                         <i class="fas fa-info-circle"></i>
                         Untuk mengganti laporan, hapus file lama terlebih dahulu lalu upload yang baru.
                     </div>
                     @endif
-                @else
-                    @if(!$sudahDinilai)
+                @elseif($canUploadLaporan)
                     <form method="POST" action="{{ route('mahasiswa.pelaksanaan.laporan-individu.upload', $dok->id) }}" enctype="multipart/form-data">
                         @csrf
                         <div style="margin-bottom:14px;">
@@ -397,12 +460,19 @@
                         </div>
                         <button type="submit" class="btn btn-primary"><i class="fas fa-upload"></i> Upload {{ $dok->nama }}</button>
                     </form>
-                    @else
+                @else
                     <div class="empty-state">
                         <i class="fas fa-file-alt"></i>
-                        <span>{{ $dok->nama }} belum diunggah.</span>
+                        <span>
+                            @if($statusLaporan === 'belum')
+                                {{ $dok->nama }} belum diunggah &mdash; menunggu periode upload dibuka.
+                            @elseif($statusLaporan === 'tutup')
+                                {{ $dok->nama }} tidak diunggah &mdash; periode upload sudah berakhir.
+                            @else
+                                {{ $dok->nama }} belum diunggah.
+                            @endif
+                        </span>
                     </div>
-                    @endif
                 @endif
             </div>
         </div>
@@ -447,7 +517,7 @@
                         <div class="file-info-actions">
                             <a href="{{ Storage::url($upload->file_path) }}" target="_blank"
                                class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i> Lihat</a>
-                            @if($isKoordinator && !$sudahDinilai)
+                            @if($isKoordinator && $canUploadLaporan)
                             <form method="POST" action="{{ route('mahasiswa.pelaksanaan.laporan-akhir.hapus', $dok->id) }}"
                                 onsubmit="return confirm('Hapus laporan ini?')">
                                 @csrf @method('DELETE')
@@ -456,43 +526,46 @@
                             @endif
                         </div>
                     </div>
-                    @if($isKoordinator && !$sudahDinilai)
+                    @if($isKoordinator && $canUploadLaporan)
                     <div class="section-hint">
                         <i class="fas fa-info-circle"></i>
                         Untuk mengganti laporan, hapus file lama terlebih dahulu lalu upload yang baru.
                     </div>
                     @endif
-                @else
-                    @if($isKoordinator && !$sudahDinilai)
-                        <form method="POST" action="{{ route('mahasiswa.pelaksanaan.laporan-akhir.upload', $dok->id) }}" enctype="multipart/form-data">
-                            @csrf
-                            <div style="margin-bottom:14px;">
-                                <label class="upload-zone" for="file-kel-{{ $dok->id }}">
-                                    <input type="file" id="file-kel-{{ $dok->id }}" name="file" accept=".pdf"
-                                           onchange="previewFile(this, 'file-kel-name-{{ $dok->id }}')">
-                                    <i class="fas fa-cloud-upload-alt"></i>
-                                    <span id="file-kel-name-{{ $dok->id }}">Klik untuk pilih file PDF</span>
-                                    <small>Maks. 20 MB, format PDF</small>
-                                </label>
-                            </div>
-                            <div class="form-group" style="margin-bottom:14px;">
-                                <label>Keterangan (opsional)</label>
-                                <input type="text" name="keterangan" placeholder="Tambahkan keterangan..." maxlength="255">
-                            </div>
-                            <button type="submit" class="btn btn-primary"><i class="fas fa-upload"></i> Upload {{ $dok->nama }}</button>
-                        </form>
-                    @else
-                        <div class="empty-state">
-                            <i class="fas fa-file-contract"></i>
-                            <span>
-                                @if($sudahDinilai)
-                                    {{ $dok->nama }} belum diunggah.
-                                @else
-                                    {{ $dok->nama }} belum diunggah oleh koordinator kelompok.
-                                @endif
-                            </span>
+                @elseif($isKoordinator && $canUploadLaporan)
+                    <form method="POST" action="{{ route('mahasiswa.pelaksanaan.laporan-akhir.upload', $dok->id) }}" enctype="multipart/form-data">
+                        @csrf
+                        <div style="margin-bottom:14px;">
+                            <label class="upload-zone" for="file-kel-{{ $dok->id }}">
+                                <input type="file" id="file-kel-{{ $dok->id }}" name="file" accept=".pdf"
+                                       onchange="previewFile(this, 'file-kel-name-{{ $dok->id }}')">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span id="file-kel-name-{{ $dok->id }}">Klik untuk pilih file PDF</span>
+                                <small>Maks. 20 MB, format PDF</small>
+                            </label>
                         </div>
-                    @endif
+                        <div class="form-group" style="margin-bottom:14px;">
+                            <label>Keterangan (opsional)</label>
+                            <input type="text" name="keterangan" placeholder="Tambahkan keterangan..." maxlength="255">
+                        </div>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-upload"></i> Upload {{ $dok->nama }}</button>
+                    </form>
+                @else
+                    <div class="empty-state">
+                        <i class="fas fa-file-contract"></i>
+                        <span>
+                            @if($sudahDinilai)
+                                {{ $dok->nama }} belum diunggah.
+                            @elseif($statusLaporan === 'belum')
+                                {{ $dok->nama }} belum diunggah &mdash; menunggu periode upload dibuka.
+                            @elseif($statusLaporan === 'tutup')
+                                {{ $dok->nama }} tidak diunggah &mdash; periode upload sudah berakhir.
+                            @else
+                                {{ $dok->nama }} belum diunggah oleh koordinator kelompok.
+                            @endif
+                        </span>
+                    </div>
+                @endif
                 @endif
             </div>
         </div>
@@ -893,6 +966,33 @@
             label.textContent = input.files[0].name;
         }
     }
+
+    // Countdown batas upload laporan
+    (function () {
+        const banner = document.getElementById('countdownBanner');
+        if (!banner) return;
+        const deadline = new Date(banner.dataset.deadline).getTime();
+        const textEl   = document.getElementById('countdownText');
+        let timer;
+
+        function tick() {
+            const diff = deadline - Date.now();
+            if (diff <= 0) {
+                textEl.textContent = 'Periode telah berakhir. Muat ulang halaman ini.';
+                clearInterval(timer);
+                return;
+            }
+            const d = Math.floor(diff / 86400000);
+            const h = Math.floor((diff % 86400000) / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+            const pad = n => String(n).padStart(2, '0');
+            textEl.textContent = (d > 0 ? d + ' hari ' : '') + pad(h) + ':' + pad(m) + ':' + pad(s) + ' lagi';
+        }
+
+        tick();
+        timer = setInterval(tick, 1000);
+    })();
 
     // Tutup modal saat klik overlay
     document.querySelectorAll('.modal-overlay').forEach(overlay => {

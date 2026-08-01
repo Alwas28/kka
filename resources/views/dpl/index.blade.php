@@ -21,6 +21,19 @@
     }
     .btn-reset:hover { background:var(--gray-light); }
 
+    .btn-export {
+        margin-left:auto; padding:8px 16px; border-radius:8px;
+        font-size:12px; font-weight:700; cursor:pointer; font-family:inherit;
+        display:inline-flex; align-items:center; gap:7px; text-decoration:none;
+        border:1px solid #10b981; background:rgba(16,185,129,.08); color:#059669;
+    }
+    .btn-export:hover { background:#10b981; color:white; }
+    .btn-export.disabled {
+        border-color:var(--gray-border); background:var(--gray-light); color:var(--text-secondary);
+        cursor:not-allowed; pointer-events:none;
+    }
+    .export-hint { font-size:11px; color:var(--text-secondary); width:100%; margin-top:-4px; }
+
     /* Table card */
     .table-card { background:white; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.07); overflow:hidden; }
     .table-toolbar {
@@ -109,6 +122,18 @@
     {{-- FILTER --}}
     <form method="GET" action="{{ route('dpl.index') }}">
         <div class="filter-bar">
+            <select name="jenis_kka_id" onchange="this.form.submit()">
+                <option value="">-- Pilih Jenis KKA --</option>
+                @foreach($jenisKkaList as $jk)
+                    <option value="{{ $jk->id }}" {{ $jenisKkaId == $jk->id ? 'selected' : '' }}>{{ $jk->nama }}</option>
+                @endforeach
+            </select>
+            <select name="tahun_id" onchange="this.form.submit()">
+                <option value="">-- Pilih Tahun Pelaksanaan --</option>
+                @foreach($tahunList as $t)
+                    <option value="{{ $t->id }}" {{ $tahunId == $t->id ? 'selected' : '' }}>{{ $t->nama }}</option>
+                @endforeach
+            </select>
             <select name="kegiatan_id" onchange="this.form.submit()">
                 <option value="">-- Semua Kegiatan --</option>
                 @foreach($kegiatanList as $k)
@@ -116,10 +141,21 @@
                 @endforeach
             </select>
 
-            @if($kegiatanId)
+            @if($kegiatanId || $jenisKkaId || $tahunId)
                 <a href="{{ route('dpl.index') }}" class="btn-reset">
                     <i class="fas fa-times"></i> Reset
                 </a>
+            @endif
+
+            @if($jenisKkaId && $tahunId)
+                <a href="{{ route('dpl.export', ['jenis_kka_id' => $jenisKkaId, 'tahun_id' => $tahunId, 'kegiatan_id' => $kegiatanId]) }}" class="btn-export">
+                    <i class="fas fa-file-excel"></i> Export Excel
+                </a>
+            @else
+                <span class="btn-export disabled" title="Pilih Jenis KKA dan Tahun Pelaksanaan terlebih dahulu">
+                    <i class="fas fa-file-excel"></i> Export Excel
+                </span>
+                <span class="export-hint"><i class="fas fa-info-circle"></i> Pilih <strong>Jenis KKA</strong> dan <strong>Tahun Pelaksanaan</strong> untuk mengaktifkan export.</span>
             @endif
         </div>
     </form>
@@ -129,7 +165,7 @@
         <div class="table-toolbar">
             <div class="table-info">
                 Total <strong>{{ $dpl->total() }}</strong> penugasan DPL
-                @if($kegiatanId)
+                @if($kegiatanId || $jenisKkaId || $tahunId)
                     <span style="color:var(--maroon-main);">(terfilter)</span>
                 @endif
             </div>
@@ -229,8 +265,8 @@
             <i class="fas fa-chalkboard-teacher"></i>
             <h3>Belum ada DPL yang ditugaskan</h3>
             <p>
-                @if($kegiatanId)
-                    Tidak ada DPL yang ditugaskan untuk kegiatan yang dipilih.
+                @if($kegiatanId || $jenisKkaId || $tahunId)
+                    Tidak ada DPL yang ditugaskan untuk filter yang dipilih.
                 @else
                     Belum ada Dosen Pembimbing Lapangan yang ditugaskan ke kelompok KKA.
                 @endif

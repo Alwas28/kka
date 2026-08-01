@@ -227,6 +227,7 @@ Route::middleware('auth')->group(function () {
     // Peserta & DPL
     Route::get('/peserta', [PesertaController::class, 'index'])->name('peserta.index');
     Route::get('/dpl', [PesertaController::class, 'dpl'])->name('dpl.index');
+    Route::get('/dpl/export', [PesertaController::class, 'exportDpl'])->name('dpl.export');
 
     // Rekap
     Route::get('/rekap/pendaftaran', [RekapController::class, 'pendaftaran'])->name('rekap.pendaftaran');

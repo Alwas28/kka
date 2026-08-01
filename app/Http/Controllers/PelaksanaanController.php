@@ -38,6 +38,34 @@ class PelaksanaanController extends Controller
             ->exists();
     }
 
+    /**
+     * Cek status periode upload laporan berdasarkan tahapan 'pelaporan' kegiatan
+     * (diatur di kegiatan/{id}/edit). Mengembalikan ['belum'|'buka'|'tutup', $tahapan].
+     * Jika tahapan tidak diset (mulai & selesai kosong) → dianggap bebas ('buka').
+     */
+    private function cekPeriodeLaporan(?int $kegiatanId): array
+    {
+        $tahapan = $kegiatanId
+            ? DB::table('kegiatan_tahapan')
+                ->where('kegiatan_id', $kegiatanId)
+                ->where('nama', 'pelaporan')
+                ->first()
+            : null;
+
+        if (!$tahapan || (!$tahapan->mulai && !$tahapan->selesai)) {
+            return ['buka', $tahapan];
+        }
+
+        $now     = now();
+        $mulai   = $tahapan->mulai   ? \Carbon\Carbon::parse($tahapan->mulai)->startOfDay() : null;
+        $selesai = $tahapan->selesai ? \Carbon\Carbon::parse($tahapan->selesai)->endOfDay() : null;
+
+        if ($mulai && $now->lt($mulai))     return ['belum', $tahapan];
+        if ($selesai && $now->gt($selesai)) return ['tutup', $tahapan];
+
+        return ['buka', $tahapan];
+    }
+
     // ─── INDEX ────────────────────────────────────────────────────────────────
 
     public function index()
@@ -95,11 +123,14 @@ class PelaksanaanController extends Controller
 
         $sudahDinilai = $nilai && $nilai->nilai_akhir !== null;
 
+        [$statusLaporan, $tahapanLaporan] = $this->cekPeriodeLaporan($kegiatan?->id);
+
         return view('mahasiswa.pelaksanaan.index', compact(
             'mahasiswa', 'kelompok', 'kegiatan', 'isKoordinator',
             'hasLogbook', 'dokumenIndividu', 'dokumenKelompok',
             'logbooks', 'uploadIndividu', 'uploadKelompok',
-            'nilai', 'gradeTable', 'sudahDinilai'
+            'nilai', 'gradeTable', 'sudahDinilai',
+            'statusLaporan', 'tahapanLaporan'
         ));
     }
 
@@ -191,6 +222,9 @@ class PelaksanaanController extends Controller
             403, 'Tidak dapat diubah karena nilai sudah diinputkan.'
         );
 
+        [$statusLaporan] = $this->cekPeriodeLaporan($kelompok->kegiatan_id);
+        abort_unless($statusLaporan === 'buka', 403, 'Periode upload laporan belum/tidak dibuka.');
+
         $dok = KegiatanDokumen::where('id', $dokumen)
             ->where('kegiatan_id', $kelompok->kegiatan_id)
             ->where('kategori', 'laporan_individu')
@@ -241,6 +275,9 @@ class PelaksanaanController extends Controller
             403, 'Tidak dapat diubah karena nilai sudah diinputkan.'
         );
 
+        [$statusLaporan] = $this->cekPeriodeLaporan($kelompok->kegiatan_id);
+        abort_unless($statusLaporan === 'buka', 403, 'Periode upload laporan belum/tidak dibuka.');
+
         $laporan = LaporanIndividu::where('mahasiswa_id', $mahasiswa->id)
             ->where('survey_lokasi_id', $kelompok->id)
             ->where('kegiatan_dokumen_id', $dokumen)
@@ -269,6 +306,9 @@ class PelaksanaanController extends Controller
             $this->cekSudahDinilai($mahasiswa->id, $kelompok->id),
             403, 'Tidak dapat diubah karena nilai sudah diinputkan.'
         );
+
+        [$statusLaporan] = $this->cekPeriodeLaporan($kelompok->kegiatan_id);
+        abort_unless($statusLaporan === 'buka', 403, 'Periode upload laporan belum/tidak dibuka.');
 
         $dok = KegiatanDokumen::where('id', $dokumen)
             ->where('kegiatan_id', $kelompok->kegiatan_id)
@@ -322,6 +362,9 @@ class PelaksanaanController extends Controller
             $this->cekSudahDinilai($mahasiswa->id, $kelompok->id),
             403, 'Tidak dapat diubah karena nilai sudah diinputkan.'
         );
+
+        [$statusLaporan] = $this->cekPeriodeLaporan($kelompok->kegiatan_id);
+        abort_unless($statusLaporan === 'buka', 403, 'Periode upload laporan belum/tidak dibuka.');
 
         $laporan = LaporanAkhir::where('survey_lokasi_id', $kelompok->id)
             ->where('kegiatan_dokumen_id', $dokumen)
