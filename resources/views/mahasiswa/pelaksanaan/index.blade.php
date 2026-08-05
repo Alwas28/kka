@@ -566,7 +566,6 @@
                         </span>
                     </div>
                 @endif
-                @endif
             </div>
         </div>
         @endforeach
